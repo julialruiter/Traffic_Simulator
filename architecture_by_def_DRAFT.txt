@@ -13,9 +13,6 @@ class TrafficManager:
         '''outputs list of nodes, edges, car locations'''
         pass
 
-    def get_snapshot_deltas(self):
-        pass    
-
     def get_node_neighbours(self):   # todo:  move to node
         pass
 
