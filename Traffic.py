@@ -31,8 +31,9 @@ class TrafficManager:
     def get_node_neighbours(self):   # todo:  move to node
         pass
 
-    def place_car(self, car):
-        pass
+    def add_car(self, car):
+        if self.graph.check_valid_car(car) == True:
+            self.graph.add_car(car)
 
     def remove_car(self, car):
         pass
@@ -110,6 +111,38 @@ class Network:
         else:
             raise Exception("Start Node ID DNE")
 
+    def add_car(self, car):
+        new_car = Car(car["car_ID"],
+                        car["car_length"],
+                        car["start_edge"],
+                        car["start_pos_meter"],
+                        car["end_edge"],
+                        car["end_pos_meter"],
+                        car["path"],
+                        car["car_type"] )
+
+    def check_valid_car(self, car):
+        car_ID = car["car_ID"]  # check uniqueness
+        if car_ID in list(self.car_ID_to_car.keys()):
+            raise Exception("That car ID already exists.")
+        
+        start_edge = car["start_edge"]
+        if start_edge not in list(self.edge_ID_to_edge.keys()):
+            raise Exception("Start edge does not exist")
+
+        start_pos_meter = car["start_pos_meter"]
+
+        
+        end_pos_meter = car["end_pos_meter"]
+
+        if car["car_type"] == "static":
+            path_edge_list = car["path"]
+            if path_edge_list[-1] != end_edge:
+                raise Exception("Path invalid: end does not match ")
+            for edge in path_edge_list:
+                if edge not in list(self.edge_ID_to_edge.keys()):
+                    raise Exception("Path has edges that do not exist")
+        
 
     def remove_node(self, node):
         # raise exception: not implemented yet

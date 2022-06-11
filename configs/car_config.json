@@ -1,14 +1,16 @@
 {
     "car_list": [
         {
-            "car_id": 7000,
+            "car_ID": 7000,
             "car_length": 2.5, 
-            "start_pos": "(5000, 3.2)",
-            "end_pos": "(5002, 20.7)",
+            "start_edge": 5000,
+            "start_pos_meter": 3.2,            
+            "end_edge": 5002,
+            "end_pos_meter": 20.7,
             "path": [
-                5000,
                 5002
-            ]
+            ],
+            "car_type": "static"
         }
     ]
 }

@@ -10,7 +10,18 @@ if __name__ == "__main__":
     except Exception as E:
         print(E)
 
+    car_config = None
+    try:
+        with open("./configs/car_config.json") as car_file:   # need fully qualified path, not relative
+            car_config = json.load(car_file)
+    except Exception as E:
+        print(E)
+
     tm = TrafficManager(network_config)
+
+    for car in car_config["car_list"]:
+        tm.add_car(car)
+
     with open('snapshot.json', 'w') as f:
         json.dump(tm.get_snapshot(), f)
 
