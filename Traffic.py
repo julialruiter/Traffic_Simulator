@@ -70,8 +70,14 @@ class Network:
                         edge["max_capacity"] )
         if new_edge.get_start_node_id() in self.node_ID_to_node:
             if new_edge.get_end_node_id() in self.node_ID_to_node:
-                new_edge.set_start_node(self.node_ID_to_node[new_edge.get_start_node_id])
-                new_edge.set_end_node(self.node_ID_to_node[new_edge.get_end_node_id])
+                start_node = self.node_ID_to_node[new_edge.get_start_node_id]
+                new_edge.set_start_node(start_node)
+                start_node.add_to_inbound(new_edge)
+
+                end_node = self.node_ID_to_node[new_edge.get_end_node_id]
+                new_edge.set_end_node(end_node)
+                end_node.add_to_outbound(new_edge)
+
                 self.edge_ID_to_edge[new_edge.get_edge_ID()] = new_edge
             else:
                 raise Exception("End Node ID DNE")
@@ -106,9 +112,11 @@ class Node:
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.neighbours = collections.defaultdict(lambda: None)  # TODO: calculate later
 
-    #def add_inbound_edge(self):
+    def add_to_inbound(self, edge):
+        self.inbound_edge_ID_to_edge[edge.get_edge_ID()] = edge
 
-
+    def add_to_outbound(self, edge):
+        self.outbound_edge_ID_to_edge[edge.get_edge_ID()] = edge
 
     def tick(self):
         '''advance state of network on the node level'''
