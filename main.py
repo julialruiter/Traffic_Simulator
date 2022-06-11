@@ -11,7 +11,9 @@ if __name__ == "__main__":
         print(E)
 
     tm = TrafficManager(network_config)
-    print(tm.get_snapshot())
+    with open('snapshot.json', 'w') as f:
+        json.dump(tm.get_snapshot(), f)
+
 
 
     

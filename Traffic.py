@@ -61,13 +61,23 @@ class Network:
 
     def get_snapshot(self):
         '''outputs list of nodes, edges'''
+        snapshot = {}
+
         edge_snapshots = []
         for edge_key in self.edge_ID_to_edge:
             edge = self.edge_ID_to_edge[edge_key]
             edge_raw = edge.get_snapshot()  
             edge_snapshots.append(edge_raw)
-        return edge_snapshots
-            # TODO:  come back after defining car storage
+        snapshot["edges"] = edge_snapshots
+
+        node_snapshots = []
+        for node_key in self.node_ID_to_node:
+            node = self.node_ID_to_node[node_key]
+            node_raw = node.get_snapshot()  
+            node_snapshots.append(node_raw)
+        snapshot["nodes"] = node_snapshots
+
+        return snapshot
 
     def add_node(self, node):
         '''imports from node dictionary'''
@@ -134,6 +144,12 @@ class Node:
 
     def add_to_outbound(self, edge):
         self.outbound_edge_ID_to_edge[edge.get_edge_ID()] = edge
+
+    def get_snapshot(self):
+        raw = copy.deepcopy(self.__dict__)
+        return {"id": self.id}
+        #  TODO:  use the deepcopy when implmenting inbound and outbound
+
 
     def tick(self):
         '''advance state of network on the node level'''
