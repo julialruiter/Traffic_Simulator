@@ -56,7 +56,9 @@ class Network:
     def add_node(self, node):
         '''imports from node dictionary'''
         new_node = Node(node["node_ID"])
-        self.node_ID_to_node[node_id] = new_node
+        if self.node_ID_to_node[new_node.get_node_ID()]:
+            raise Exception("There is already a Node with this ID")
+        self.node_ID_to_node[new_node.get_node_ID()] = new_node
 
     def add_edge(self, edge):
         '''imports from edge dictionary'''
@@ -68,6 +70,8 @@ class Network:
                         edge["max_capacity"] )
         if new_edge.get_start_node_id() in self.node_ID_to_node:
             if new_edge.get_end_node_id() in self.node_ID_to_node:
+                new_edge.set_start_node(self.node_ID_to_node[new_edge.get_start_node_id])
+                new_edge.set_end_node(self.node_ID_to_node[new_edge.get_end_node_id])
                 self.edge_ID_to_edge[new_edge.get_edge_ID()] = new_edge
             else:
                 raise Exception("End Node ID DNE")
