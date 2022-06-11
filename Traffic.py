@@ -1,9 +1,11 @@
-
+from asyncio.windows_events import NULL
+import collections
 
 class TrafficManager:
-    def __init__(self) -> None:
+    def __init__(self, network_config) -> None:
+        self.graph = Network(network_config)
         pass
-
+    
     def tick(self):
         '''advance state of network'''
         # tick network
@@ -33,8 +35,12 @@ class TrafficManager:
 
 
 class Network:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, config) -> None:
+        self.node_ID_to_node = collections.defaultdict(lambda: None)
+        self.edge_ID_to_edge = collections.defaultdict(lambda: None)
+        self.car_ID_to_car = collections.defaultdict(lambda: None)
+        for node in config["node_list"]:
+            self.add_node(node["node_ID"])
 
     def get_node_neighbours(self):  
         pass
@@ -43,8 +49,9 @@ class Network:
         '''outputs list of nodes, edges'''
         pass
 
-    def add_node(self, node):
-        pass
+    def add_node(self, node_id):
+        new_node = Node(node_id)
+        self.node_ID_to_node[node_id] = new_node
 
     def add_edge(self, edge):
         pass
@@ -57,13 +64,13 @@ class Network:
         # raise exception: not implemented yet
         pass
 
-    def get_node(self, node):
+    def get_node_from_id(self, node_id):
         '''get object from ID'''
-        pass
+        return self.node_ID_to_node[node_id]
 
-    def get_edge(self, node):
+    def get_edge_id(self, edge_id):
         '''get object from ID'''
-        pass
+        return self.edge_ID_to_edge[edge_id]
 
     def tick(self):
         # tick_node
@@ -71,8 +78,11 @@ class Network:
 
 
 class Node:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, id) -> None:
+        self.id = id
+        self.inbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
+        self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
+        self.neighbours = collections.defaultdict(lambda: None)  # TODO: calculate later
 
     def tick(self):
         '''advance state of network on the node level'''
@@ -85,12 +95,14 @@ class Node:
 
     def get_node_ID(self):
         '''get object from ID'''
-        pass
+        return self.id
 
 
 class Edge:
-    def __init__(self) -> None:
-        pass
+    def __init__(self, id) -> None:
+        self.id = id
+        self.start_node_ID_to_node = collections.defaultdict(lambda: None)   # not actually needed 
+        self.end_node_ID_to_node = collections.defaultdict(lambda: None)    # for neighbours
 
     def tick(self):
         '''advance state of network on the edge level'''
@@ -99,11 +111,12 @@ class Edge:
 
     def get_edge_ID(self):
         '''get object from ID'''
-        pass
+        return self.id
 
 
 class Car:
     def __init__(self) -> None:
+        
         pass
 
     def tick(self):
@@ -116,4 +129,4 @@ class Car:
 
     def get_car_ID(self):
         '''get object from ID'''
-        pass
+        return self.id
