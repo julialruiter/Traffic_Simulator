@@ -1,6 +1,7 @@
 import copy
 from cmath import inf
 import collections
+from hashlib import new
 from platform import node
 
 class TrafficManager:
@@ -62,12 +63,15 @@ class Network:
 
     def get_snapshot(self):
         '''outputs list of nodes, edges'''
+        car_set = set()
         snapshot = {}
 
         edge_snapshots = []
         for edge_key in self.edge_ID_to_edge:
             edge = self.edge_ID_to_edge[edge_key]
-            edge_raw = edge.get_snapshot()  
+            edge_raw = edge.get_snapshot()
+            for car_id in edge_raw["waiting_cars"]:  # TODO:  add method for taking cars from "Current_cars" dict
+                car_set.add(car_id)
             edge_snapshots.append(edge_raw)
         snapshot["edges"] = edge_snapshots
 
@@ -78,6 +82,12 @@ class Network:
             node_snapshots.append(node_raw)
         snapshot["nodes"] = node_snapshots
 
+        car_snapshots = []
+        for car_id in car_set:
+            car = self.car_ID_to_car[car_id]
+            car_raw = car.get_snapshot()
+            car_snapshots.append(car_raw)
+        snapshot["cars"] = car_snapshots
         return snapshot
 
     def add_node(self, node):
@@ -120,7 +130,12 @@ class Network:
                         car["end_pos_meter"],
                         car["path"],
                         car["car_type"] )
-        start_edge_ID = new_car.get_start_id()
+        print("We are adding" , new_car.get_car_ID(), new_car)
+        self.car_ID_to_car[new_car.get_car_ID()] = new_car
+        start_edge_ID = new_car.get_start_edge()
+        start_edge = self.edge_ID_to_edge[start_edge_ID]
+        start_edge.add_car_to_wait_queue(new_car)
+
 
 
     def check_valid_car(self, car):
@@ -227,10 +242,10 @@ class Edge:
         self.max_capacity = max_capacity
 
         self.start_node = self.end_node = None    # Default to None
-        self.car_id_to_car = collections.defaultdict(lambda: None)
         self.current_cars = []
         self.waiting_cars = []
         self.processed_cars = []
+
     def set_start_node(self, node_ptr):
         self.start_node = node_ptr
 
@@ -248,20 +263,18 @@ class Edge:
         raw = copy.deepcopy(self.__dict__)
         raw.pop("start_node")
         raw.pop("end_node")
-        cars = raw.pop("car_id_to_car", [])
-        cars = [i for i in cars.keys()]
         raw.pop("processed_cars")
         
         waiting_cars = raw.pop("waiting_cars", [])
-        if waiting_cars != {}:
-            cleaned_waiting_cars = [{car.get_car_id() : car.get_snapshot()} for car in waiting_cars]
+        if waiting_cars != []:
+            cleaned_waiting_cars = [car[0] for car in waiting_cars]
             raw["waiting_cars"] = cleaned_waiting_cars
         else:
             raw["waiting_cars"] = {}
 
         current_cars = raw.pop("current_cars", [])    
         if current_cars != []:
-            cleaned_current_cars = [{car.get_car_id() : car.get_snapshot()} for car in current_cars]
+            cleaned_current_cars = [car[0] for car in current_cars]
             raw["current_cars"] = cleaned_current_cars
         else:
             raw["current_cars"] = {}
@@ -289,6 +302,10 @@ class Edge:
 
     def get_max_capacity(self):
         return self.max_capacity
+
+    def add_car_to_wait_queue(self, car):
+        car_pos_object = [car.get_car_ID(), [car.get_start_pos_meter(), car.get_end_pos_meter()]]
+        self.waiting_cars.append(car_pos_object)
 
 
 
