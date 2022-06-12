@@ -120,28 +120,37 @@ class Network:
                         car["end_pos_meter"],
                         car["path"],
                         car["car_type"] )
+        start_edge_ID = new_car.get_start_id()
+
 
     def check_valid_car(self, car):
         car_ID = car["car_ID"]  # check uniqueness
         if car_ID in list(self.car_ID_to_car.keys()):
             raise Exception("That car ID already exists.")
         
-        start_edge = car["start_edge"]
-        if start_edge not in list(self.edge_ID_to_edge.keys()):
+        start_edge_ID = car["start_edge"]
+        if start_edge_ID not in list(self.edge_ID_to_edge.keys()):
             raise Exception("Start edge does not exist")
 
         start_pos_meter = car["start_pos_meter"]
+        start_edge = self.edge_ID_to_edge[start_edge_ID]
+        if start_pos_meter > start_edge.get_edge_length():
+            raise Exception("Start position exceeds max edge length")
 
-        
+        end_edge_ID = car["end_edge"]
+        end_edge = self.edge_ID_to_edge[end_edge_ID]
         end_pos_meter = car["end_pos_meter"]
+        if end_pos_meter > end_edge.get_edge_length():
+            raise Exception("End position exceeds max edge length")
 
         if car["car_type"] == "static":
             path_edge_list = car["path"]
-            if path_edge_list[-1] != end_edge:
+            if path_edge_list[-1] != end_edge_ID:
                 raise Exception("Path invalid: end does not match ")
             for edge in path_edge_list:
                 if edge not in list(self.edge_ID_to_edge.keys()):
                     raise Exception("Path has edges that do not exist")
+        return True
         
 
     def remove_node(self, node):
@@ -284,9 +293,24 @@ class Edge:
 
 
 class Car:
-    def __init__(self) -> None:
-        
-        pass
+    def __init__(self, 
+                 car_ID,
+                 car_length,
+                 start_edge,
+                 start_pos_meter,
+                 end_edge,
+                 end_pos_meter,
+                 path,
+                 car_type) -> None:
+
+        self.id = car_ID
+        self.car_length = car_length
+        self.start_edge = start_edge
+        self.start_pos_meter = start_pos_meter
+        self.end_edge = end_edge
+        self.end_pos_meter = end_pos_meter
+        self.path = path
+        self.car_type = car_type
 
     def tick(self):
         '''advance state of network on the car level'''
@@ -298,5 +322,25 @@ class Car:
         pass
 
     def get_car_ID(self):
-        '''get object from ID'''
         return self.id
+    
+    def get_car_length(self):
+        return self.car_length
+    
+    def get_start_edge(self):
+        return self.start_edge
+    
+    def get_start_pos_meter(self):
+        return self.start_pos_meter
+    
+    def get_end_edge(self):
+        return self.end_edge
+    
+    def get_end_pos_meter(self):
+        return self.end_pos_meter
+
+    def get_path(self):
+        return self.path
+
+    def get_car_type(self):
+        return self.car_type
