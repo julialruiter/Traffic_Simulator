@@ -25,6 +25,8 @@ if __name__ == "__main__":
     with open('snapshot.json', 'w') as f:
         json.dump(tm.get_snapshot(), f)
 
+    tm.tick()
+
 
 
     

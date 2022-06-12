@@ -11,6 +11,18 @@
                 5002
             ],
             "car_type": "static"
+        },
+        {
+            "car_ID": 7001,
+            "car_length": 2.5, 
+            "start_edge": 5000,
+            "start_pos_meter": 21,            
+            "end_edge": 5002,
+            "end_pos_meter": 6.5,
+            "path": [
+                5002
+            ],
+            "car_type": "static"
         }
     ]
 }

@@ -1,18 +1,19 @@
 import copy
 from cmath import inf
 import collections
-from hashlib import new
-from platform import node
+import random
 
 class TrafficManager:
     def __init__(self, network_config) -> None:
         self.graph = Network(network_config)
+        self.timestamp = 0
         pass
     
     def tick(self):
         '''advance state of network'''
-        # tick network
-        pass
+        self.timestamp += 1
+        self.graph.tick()
+
 
     def get_snapshot(self):
         '''outputs list of nodes, edges, car locations'''
@@ -27,7 +28,10 @@ class TrafficManager:
         return network_raw
 
     def get_snapshot_deltas(self):
-        pass    
+        pass  
+
+    def get_timestamp(self):
+        return self.timestamp  
 
     def get_node_neighbours(self):   # todo:  move to node
         pass
@@ -137,7 +141,6 @@ class Network:
         start_edge.add_car_to_wait_queue(new_car)
 
 
-
     def check_valid_car(self, car):
         car_ID = car["car_ID"]  # check uniqueness
         if car_ID in list(self.car_ID_to_car.keys()):
@@ -149,13 +152,13 @@ class Network:
 
         start_pos_meter = car["start_pos_meter"]
         start_edge = self.edge_ID_to_edge[start_edge_ID]
-        if start_pos_meter > start_edge.get_edge_length():
+        if start_pos_meter > start_edge.get_length():
             raise Exception("Start position exceeds max edge length")
 
         end_edge_ID = car["end_edge"]
         end_edge = self.edge_ID_to_edge[end_edge_ID]
         end_pos_meter = car["end_pos_meter"]
-        if end_pos_meter > end_edge.get_edge_length():
+        if end_pos_meter > end_edge.get_length():
             raise Exception("End position exceeds max edge length")
 
         if car["car_type"] == "static":
@@ -186,8 +189,12 @@ class Network:
 
     def tick(self):
         # tick_node
-        pass
-
+        node_keys = list(self.node_ID_to_node.keys())
+        random.shuffle(node_keys)
+        for node_key in node_keys:
+            node = self.node_ID_to_node[node_key]
+            print(node)
+            node.tick()
 
 class Node:
     def __init__(self, id) -> None:
@@ -195,6 +202,7 @@ class Node:
         self.inbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.neighbours = collections.defaultdict(lambda: None)  # TODO: calculate later
+        self.intersection_time_cost = 0    # weight representing time (ex: time it takes to transverse intersection)
 
     def add_to_inbound(self, edge):
         self.inbound_edge_ID_to_edge[edge.get_edge_ID()] = edge
@@ -210,8 +218,28 @@ class Node:
 
     def tick(self):
         '''advance state of network on the node level'''
-        # tick_edge
-        pass
+        outbound_candidates = {}
+
+        for inbound_edge_key in list(self.inbound_edge_ID_to_edge.keys()):
+            inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_key]
+            inbound_edge_current_cars_list = inbound_edge.get_current_cars()
+            print("INBOUND_EDGE_CAR_LIST:", inbound_edge_current_cars_list)
+            max_dist_per_tick = inbound_edge.get_max_speed()
+            edge_length = inbound_edge.get_length()
+
+            outbound_candidates_per_edge = []
+            for car in inbound_edge_current_cars_list:
+                print('cars' ,inbound_edge_current_cars_list)
+                current_front_pos = car[1][0]
+                print(current_front_pos)
+                potential_pos_after_tick = current_front_pos + max_dist_per_tick
+                if potential_pos_after_tick > edge_length + self.intersection_time_cost:
+                    outbound_candidates_per_edge.append([car, potential_pos_after_tick - self.intersection_time_cost - self.edge_length])
+            outbound_candidates[inbound_edge_key] = outbound_candidates_per_edge
+
+        print("ob ", outbound_candidates)
+
+
 
     def change_stoplight(self):   # todoL  deal with later
         '''toggle which edges in and out can move'''
@@ -233,7 +261,7 @@ class Edge:
                  ) -> None:  # NOTE:  adjust if more fields required
         # self.start_node_ID_to_node = collections.defaultdict(lambda: None)   # not actually needed 
         # self.end_node_ID_to_node = collections.defaultdict(lambda: None)    # for neighbours
-
+        self.edge_car_ID_to_car = collections.defaultdict(lambda: None)
         self.id = id
         self.start_node_id = start_node_id
         self.end_node_id = end_node_id
@@ -259,12 +287,14 @@ class Edge:
         self.current_cars.sort(key=lambda x:x[1][0])
         # tick_car
         pass
+
     def get_snapshot(self):
         raw = copy.deepcopy(self.__dict__)
         raw.pop("start_node")
         raw.pop("end_node")
         raw.pop("processed_cars")
-        
+        raw.pop("edge_car_ID_to_car")
+
         waiting_cars = raw.pop("waiting_cars", [])
         if waiting_cars != []:
             cleaned_waiting_cars = [car[0] for car in waiting_cars]
@@ -294,7 +324,7 @@ class Edge:
     def get_end_node_id(self):
         return self.end_node_id
 
-    def get_edge_length(self):
+    def get_length(self):
         return self.edge_length
 
     def get_max_speed(self):
@@ -306,8 +336,10 @@ class Edge:
     def add_car_to_wait_queue(self, car):
         car_pos_object = [car.get_car_ID(), [car.get_start_pos_meter(), car.get_end_pos_meter()]]
         self.waiting_cars.append(car_pos_object)
+        self.edge_car_ID_to_car[car.get_car_ID()] = car
 
-
+    def get_current_cars(self):
+        return self.current_cars
 
 class Car:
     def __init__(self, 
