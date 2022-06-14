@@ -27,6 +27,8 @@ if __name__ == "__main__":
 
     tm.tick()
 
+    tm.get_node_edges_in_out(2)
+
 
 
     

@@ -33,20 +33,23 @@ class TrafficManager:
     def get_timestamp(self):
         return self.timestamp  
 
-    def get_node_neighbours(self):   # todo:  move to node
-        pass
+    def get_node_edges_in_out(self, node_ID):   # todo:  move to node
+        node = self.graph.get_node_from_id(node_ID)
+        inbound_edge_list = node.get_node_inbound()
+        outbound_edge_list = node.get_node_outbound()
+        print(inbound_edge_list)
 
     def add_car(self, car):
         if self.graph.check_valid_car(car) == True:
             self.graph.add_car(car)
 
-    def remove_car(self, car):
+    def remove_car(self, car_id):
         pass
 
-    def advance_car(self, car):
+    def resume_car(self, car_id):
         pass
 
-    def pause_car(self, car):
+    def pause_car(self, car_id):
         pass
 
 
@@ -60,10 +63,6 @@ class Network:
         # print(self.node_ID_to_node)
         for edge in config["edge_list"]:
             self.add_edge(edge)
-
-
-    def get_node_neighbours(self):  
-        pass
 
     def get_snapshot(self):
         '''outputs list of nodes, edges'''
@@ -246,9 +245,13 @@ class Node:
         pass
 
     def get_node_ID(self):
-        '''get object from ID'''
         return self.id
 
+    def get_node_inbound(self):
+        return self.inbound_edge_ID_to_edge.keys()
+
+    def get_node_outbound(self):
+        return self.outbound_edge_ID_to_edge.keys()
 
 class Edge:
     def __init__(self, 
