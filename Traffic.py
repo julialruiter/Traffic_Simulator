@@ -35,9 +35,13 @@ class TrafficManager:
 
     def get_node_edges_in_out(self, node_ID):   # todo:  move to node
         node = self.graph.get_node_from_id(node_ID)
-        inbound_edge_list = node.get_node_inbound()
-        outbound_edge_list = node.get_node_outbound()
-        print(inbound_edge_list)
+        inbound_edge_list = list(node.get_node_inbound())
+        outbound_edge_list = list(node.get_node_outbound())
+        node_output = {}
+        node_output["node_id"] = node_ID
+        node_output["inbound_edges"] = inbound_edge_list
+        node_output["outbound_edges"] = outbound_edge_list
+        print(node_output)
 
     def add_car(self, car):
         if self.graph.check_valid_car(car) == True:
