@@ -367,6 +367,7 @@ class Car:
         self.end_pos_meter = end_pos_meter
         self.path = path
         self.car_type = car_type
+        self.mobile = True  # default.  Toggle to False IFF API call received
 
     def tick(self):
         '''advance state of network on the car level'''
