@@ -41,7 +41,7 @@ class TrafficManager:
         node_output["node_id"] = node_ID
         node_output["inbound_edges"] = inbound_edge_list
         node_output["outbound_edges"] = outbound_edge_list
-        print(node_output)
+        # print(node_output)
 
     def add_car(self, car):
         if self.graph.check_valid_car(car) == True:
@@ -138,7 +138,7 @@ class Network:
                         car["end_pos_meter"],
                         car["path"],
                         car["car_type"] )
-        print("We are adding" , new_car.get_car_ID(), new_car)
+        # print("We are adding" , new_car.get_car_ID(), new_car)
         self.car_ID_to_car[new_car.get_car_ID()] = new_car
         start_edge_ID = new_car.get_start_edge()
         start_edge = self.edge_ID_to_edge[start_edge_ID]
@@ -203,7 +203,7 @@ class Network:
         random.shuffle(node_keys)
         for node_key in node_keys:
             node = self.node_ID_to_node[node_key]
-            print(node)
+            # print(node)
             expended_energy += node.tick()
 
         return expended_energy
@@ -247,30 +247,45 @@ class Node:
 
         return expended_energy
 
-
     def get_inbound_exit_candidates(self):
         outbound_candidates = {}
-
         for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
             inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
             inbound_edge_current_cars_list = inbound_edge.get_current_cars()
-            print("INBOUND_EDGE_CAR_LIST:", inbound_edge_current_cars_list)
-            max_dist_per_tick = inbound_edge.get_max_speed()
-            edge_length = inbound_edge.get_length()
-            print(edge_length)
-
-            outbound_candidates_per_edge = []
+            print("N", self.get_node_ID(), " EDGE INBOUND: ", inbound_edge_ID, ":" ,inbound_edge_current_cars_list)
             for car in inbound_edge_current_cars_list:
-                print('cars' ,inbound_edge_current_cars_list)
                 current_front_pos = car.get_current_pos_meter_car_front()
-                print(current_front_pos)
-                potential_pos_after_tick = current_front_pos + max_dist_per_tick
-                if potential_pos_after_tick > edge_length + self.intersection_time_cost:
-                    outbound_candidates_per_edge.append([car, potential_pos_after_tick - self.intersection_time_cost - edge_length])
-            outbound_candidates[inbound_edge_ID] = outbound_candidates_per_edge
+                if current_front_pos == inbound_edge.get_length():
+                    outbound_candidates[inbound_edge_ID] = car
 
+        print("N: ", self.id ,"\tob: ", outbound_candidates)
         return outbound_candidates
-        print("ob ", outbound_candidates)
+        
+
+
+    # def get_inbound_exit_candidates(self):
+    #     outbound_candidates = {}
+
+    #     for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
+    #         inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
+    #         inbound_edge_current_cars_list = inbound_edge.get_current_cars()
+    #         print("N", self.get_node_ID(), " EDGE INBOUND: ", inbound_edge_ID, ":" ,inbound_edge_current_cars_list)
+    #         max_dist_per_tick = inbound_edge.get_max_speed()
+    #         edge_length = inbound_edge.get_length()
+    #         # print(edge_length)
+
+    #         outbound_candidates_per_edge = []
+    #         for car in inbound_edge_current_cars_list:
+    #             # print('cars' ,inbound_edge_current_cars_list)
+    #             current_front_pos = car.get_current_pos_meter_car_front()
+    #             # print(current_front_pos)
+    #             potential_pos_after_tick = current_front_pos + max_dist_per_tick
+    #             if potential_pos_after_tick > edge_length + self.intersection_time_cost:
+    #                 outbound_candidates_per_edge.append([car, potential_pos_after_tick - self.intersection_time_cost - edge_length])
+    #         outbound_candidates[inbound_edge_ID] = outbound_candidates_per_edge
+
+    #     return outbound_candidates
+    #     print("ob ", outbound_candidates)
 
 
 
@@ -322,7 +337,7 @@ class Edge:
         expended_energy = 0
 
         # Sort Current Cars on starting position, ascending
-        self.current_cars.sort(key=lambda x:x.current_pos_meter_car_front)
+        self.current_cars.sort(key=lambda x:x.current_pos_meter_car_front, reverse=True)
 
         # Process any waiting cars
         for waiting_car in self.waiting_cars:
@@ -334,20 +349,31 @@ class Edge:
         self.waiting_cars = []  # remove this later
 
         # Process current cars on edge --cars do not move yet
-        prev_car_back = self.edge_length  # 
+        prev_car_back = self.edge_length  # max position a car can travel, resets with each car
         for current_car in self.current_cars:
             current_car_id = current_car.get_car_ID()
             current_car_object = self.edge_car_ID_to_car[current_car_id]
 
-            #car_pos_back = car_pos_front - waiting_car.get_car_length()
-            if not current_car_object.current_pos_meter_car_front >= self.edge_length:
-                current_car_object.current_pos_meter_car_front += 1
-                expended_energy += 1 # TODO. THIS SHOULD GET POTENTIAL
+            current_car_front = current_car_object.current_pos_meter_car_front
+
+            distance_to_advance = min(self.max_speed, prev_car_back - current_car_front)      # no buffer distance
+            distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
+            current_car_object.current_tick_potential = 1 - distance_to_advance_ticks  # TODO:  
+            current_car.current_pos_meter_car_front += distance_to_advance  # actually move
+            expended_energy += current_car.tick()   # get potential differential
+
+            prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
+
+            # if not car_front >= self.edge_length:
+            #     current_car_object.current_pos_meter_car_front += 1
+            #     expended_energy += 1 # TODO. THIS SHOULD GET POTENTIAL
             self.processed_cars.append(current_car)
+
+
         self.current_cars = self.processed_cars
         self.processed_cars = []
 
-        print(self.id, self.current_cars)
+        # print(self.id, self.current_cars)
         return expended_energy
 
     def get_snapshot(self):

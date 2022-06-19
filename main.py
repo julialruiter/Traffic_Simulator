@@ -25,10 +25,12 @@ if __name__ == "__main__":
     while True:
         count+=1
         pot = tm.tick()
+        with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
+            json.dump(tm.get_snapshot(), f)
         if pot:
-            
             print("Iteration: #", count, "\t Potential:", pot)
         else:
+            print("Iteration: #", count, "\t Potential:", pot)
             break
     
     # for tick in range(500):
