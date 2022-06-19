@@ -233,11 +233,20 @@ class Node:
         expended_energy = 0
         # look for inbound_exit_candidates
         candidate_list_dictionary = self.get_inbound_exit_candidates()
+        # for every car, get next edge in path
+        # if room on next edge, place
+        # else: put back on inbound (key)
+
+
 
         # advance cars on outbound edges as much as possible
         for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
             outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
+
+
+    
             expended_energy += outbound_edge.tick()  # move and place new cars
+
 
         # attempt to place candidates
         candidate_list_IDs = []
@@ -248,7 +257,7 @@ class Node:
         return expended_energy
 
     def get_inbound_exit_candidates(self):
-        outbound_candidates = {}
+        outbound_candidates = collections.defaultdict(lambda: None)
         for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
             inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
             inbound_edge_current_cars_list = inbound_edge.get_current_cars()
@@ -257,36 +266,13 @@ class Node:
                 current_front_pos = car.get_current_pos_meter_car_front()
                 if current_front_pos == inbound_edge.get_length():
                     outbound_candidates[inbound_edge_ID] = car
+                    car_index = inbound_edge_current_cars_list.index(car)
+                    inbound_edge.current_cars = inbound_edge_current_cars_list[0:car_index] + inbound_edge_current_cars_list[car_index+1::]
+                    inbound_edge.edge_car_ID_to_car.pop(car.get_car_ID())
 
+                
         print("N: ", self.id ,"\tob: ", outbound_candidates)
         return outbound_candidates
-        
-
-
-    # def get_inbound_exit_candidates(self):
-    #     outbound_candidates = {}
-
-    #     for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
-    #         inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
-    #         inbound_edge_current_cars_list = inbound_edge.get_current_cars()
-    #         print("N", self.get_node_ID(), " EDGE INBOUND: ", inbound_edge_ID, ":" ,inbound_edge_current_cars_list)
-    #         max_dist_per_tick = inbound_edge.get_max_speed()
-    #         edge_length = inbound_edge.get_length()
-    #         # print(edge_length)
-
-    #         outbound_candidates_per_edge = []
-    #         for car in inbound_edge_current_cars_list:
-    #             # print('cars' ,inbound_edge_current_cars_list)
-    #             current_front_pos = car.get_current_pos_meter_car_front()
-    #             # print(current_front_pos)
-    #             potential_pos_after_tick = current_front_pos + max_dist_per_tick
-    #             if potential_pos_after_tick > edge_length + self.intersection_time_cost:
-    #                 outbound_candidates_per_edge.append([car, potential_pos_after_tick - self.intersection_time_cost - edge_length])
-    #         outbound_candidates[inbound_edge_ID] = outbound_candidates_per_edge
-
-    #     return outbound_candidates
-    #     print("ob ", outbound_candidates)
-
 
 
     def change_stoplight(self):   # todoL  deal with later
