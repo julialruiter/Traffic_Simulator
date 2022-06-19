@@ -297,25 +297,25 @@ class Edge:
         '''advance state of network on the edge level'''
 
         # Sort Current Cars on starting position, ascending
-        self.current_cars.sort(key=lambda x:x[1])
+        self.current_cars.sort(key=lambda x:x.current_pos_meter_car_front)
         # Process any waiting cars
         for waiting_car in self.waiting_cars:
-            car_id = waiting_car[0]
-            car_object = self.edge_car_ID_to_car[car_id]
-            car_pos_front = waiting_car[1]
-            car_pos_back = car_pos_front - car_object.get_car_length()
-            car_info_list = [car_id, car_pos_front, car_pos_back]
+            car_id = waiting_car.get_car_ID()
+            car_pos_front = waiting_car.start_pos_meter
+            car_pos_back = car_pos_front - waiting_car.get_car_length()
+           # car_info_list = [car_id, car_pos_front, car_pos_back]  # need to change sort method
 
-            self.processed_cars.append(car_info_list)
-            car_object.current_edge = self.id
-            car_object.current_pos_meter = car_pos_front
+            
+            waiting_car.current_edge = self.id
+            waiting_car.current_pos_meter_car_front = car_pos_front
+            self.processed_cars.append(waiting_car)
         self.waiting_cars = []  # remove this later
 
         # Process current cars on edge --cars do not move yet
         for current_car in self.current_cars:
-            current_car_id = current_car[0]
+            current_car_id = current_car.get_car_ID()
             current_car_object = self.edge_car_ID_to_car[current_car_id]
-            current_car_object.current_pos_meter+=1
+            current_car_object.current_pos_meter_car_front+=1
             self.processed_cars.append(current_car)
         self.current_cars = self.processed_cars
         self.processed_cars = []
@@ -332,14 +332,14 @@ class Edge:
 
         waiting_cars = raw.pop("waiting_cars", [])
         if waiting_cars != []:
-            cleaned_waiting_cars = [car[0] for car in waiting_cars]
+            cleaned_waiting_cars = [car.get_car_ID() for car in waiting_cars]
             raw["waiting_cars"] = cleaned_waiting_cars
         else:
             raw["waiting_cars"] = {}
 
         current_cars = raw.pop("current_cars", [])    
         if current_cars != []:
-            cleaned_current_cars = [car[0] for car in current_cars]
+            cleaned_current_cars = [car.get_car_ID() for car in current_cars]
             raw["current_cars"] = cleaned_current_cars
         else:
             raw["current_cars"] = {}
@@ -369,8 +369,7 @@ class Edge:
         return self.max_capacity
 
     def add_car_to_wait_queue(self, car):
-        car_pos_object = [car.get_car_ID(), car.get_start_pos_meter()]
-        self.waiting_cars.append(car_pos_object)
+        self.waiting_cars.append(car)
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
     def get_current_cars(self):
@@ -397,7 +396,7 @@ class Car:
         self.car_type = car_type
         self.mobile = True  # default.  Toggle to False IFF API call received
         self.current_edge = None
-        self.current_pos_meter = None
+        self.current_pos_meter_car_front = None 
 
     def tick(self):
         '''advance state of network on the car level'''
