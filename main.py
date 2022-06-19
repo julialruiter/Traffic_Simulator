@@ -21,11 +21,20 @@ if __name__ == "__main__":
 
     for car in car_config["car_list"]:
         tm.add_car(car)
-
-    for tick in range(2):
-        tm.tick()
-        with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
-            json.dump(tm.get_snapshot(), f)
+    count = 0
+    while True:
+        count+=1
+        pot = tm.tick()
+        if pot:
+            
+            print("Iteration: #", count, "\t Potential:", pot)
+        else:
+            break
+    
+    # for tick in range(500):
+    #     print("POTENTIAL" , tm.tick())
+    #     # with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
+    #     #     json.dump(tm.get_snapshot(), f)
 
 
 

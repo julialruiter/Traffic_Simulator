@@ -12,8 +12,8 @@ class TrafficManager:
     def tick(self):
         '''advance state of network'''
         self.timestamp += 1
-        self.graph.tick()
-
+        return self.graph.tick()
+        
 
     def get_snapshot(self):
         '''outputs list of nodes, edges, car locations'''
@@ -62,6 +62,7 @@ class Network:
         self.node_ID_to_node = collections.defaultdict(lambda: None)
         self.edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.car_ID_to_car = collections.defaultdict(lambda: None)
+        self.potential = None
         for node in config["node_list"]:
             self.add_node(node)
         # print(self.node_ID_to_node)
@@ -193,11 +194,19 @@ class Network:
     def tick(self):
         # tick_node
         node_keys = list(self.node_ID_to_node.keys())
+
+        # count "potential"
+        # do node tick
+        # count new "potential"
+        # while not equal, tick and compare
+        expended_energy = 0
         random.shuffle(node_keys)
         for node_key in node_keys:
             node = self.node_ID_to_node[node_key]
             print(node)
-            node.tick()
+            expended_energy += node.tick()
+
+        return expended_energy
 
 class Node:
     def __init__(self, id) -> None:
@@ -221,12 +230,25 @@ class Node:
 
     def tick(self):
         '''advance state of network on the node level'''
+        expended_energy = 0
+        # look for inbound_exit_candidates
+        candidate_list_dictionary = self.get_inbound_exit_candidates()
+
+        # advance cars on outbound edges as much as possible
         for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
             outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
-            outbound_edge.tick()
+            expended_energy += outbound_edge.tick()  # move and place new cars
+
+        # attempt to place candidates
+        candidate_list_IDs = []
 
 
-    def get_inbound_candidates(self):
+        # replace remaining candidates on their edge (move occurs on other node tick)
+
+        return expended_energy
+
+
+    def get_inbound_exit_candidates(self):
         outbound_candidates = {}
 
         for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
@@ -235,17 +257,19 @@ class Node:
             print("INBOUND_EDGE_CAR_LIST:", inbound_edge_current_cars_list)
             max_dist_per_tick = inbound_edge.get_max_speed()
             edge_length = inbound_edge.get_length()
+            print(edge_length)
 
             outbound_candidates_per_edge = []
             for car in inbound_edge_current_cars_list:
                 print('cars' ,inbound_edge_current_cars_list)
-                current_front_pos = car[1][0]
+                current_front_pos = car.get_current_pos_meter_car_front()
                 print(current_front_pos)
                 potential_pos_after_tick = current_front_pos + max_dist_per_tick
                 if potential_pos_after_tick > edge_length + self.intersection_time_cost:
-                    outbound_candidates_per_edge.append([car, potential_pos_after_tick - self.intersection_time_cost - self.edge_length])
-            outbound_candidates[inbound_edge_key] = outbound_candidates_per_edge
+                    outbound_candidates_per_edge.append([car, potential_pos_after_tick - self.intersection_time_cost - edge_length])
+            outbound_candidates[inbound_edge_ID] = outbound_candidates_per_edge
 
+        return outbound_candidates
         print("ob ", outbound_candidates)
 
 
@@ -295,33 +319,36 @@ class Edge:
 
     def tick(self):
         '''advance state of network on the edge level'''
+        expended_energy = 0
 
         # Sort Current Cars on starting position, ascending
         self.current_cars.sort(key=lambda x:x.current_pos_meter_car_front)
+
         # Process any waiting cars
         for waiting_car in self.waiting_cars:
-            car_id = waiting_car.get_car_ID()
-            car_pos_front = waiting_car.start_pos_meter
-            car_pos_back = car_pos_front - waiting_car.get_car_length()
-           # car_info_list = [car_id, car_pos_front, car_pos_back]  # need to change sort method
-
-            
+            car_pos_front = waiting_car.start_pos_meter           
             waiting_car.current_edge = self.id
             waiting_car.current_pos_meter_car_front = car_pos_front
             self.processed_cars.append(waiting_car)
+            expended_energy += waiting_car.get_max_tick_potential()
         self.waiting_cars = []  # remove this later
 
         # Process current cars on edge --cars do not move yet
+        prev_car_back = self.edge_length  # 
         for current_car in self.current_cars:
             current_car_id = current_car.get_car_ID()
             current_car_object = self.edge_car_ID_to_car[current_car_id]
-            current_car_object.current_pos_meter_car_front+=1
+
+            #car_pos_back = car_pos_front - waiting_car.get_car_length()
+            if not current_car_object.current_pos_meter_car_front >= self.edge_length:
+                current_car_object.current_pos_meter_car_front += 1
+                expended_energy += 1 # TODO. THIS SHOULD GET POTENTIAL
             self.processed_cars.append(current_car)
         self.current_cars = self.processed_cars
         self.processed_cars = []
 
         print(self.id, self.current_cars)
-
+        return expended_energy
 
     def get_snapshot(self):
         raw = copy.deepcopy(self.__dict__)
@@ -395,12 +422,17 @@ class Car:
         self.path = path
         self.car_type = car_type
         self.mobile = True  # default.  Toggle to False IFF API call received
+
         self.current_edge = None
         self.current_pos_meter_car_front = None 
+        self.max_tick_potential = 1
+        self.current_tick_potential = 1
+
 
     def tick(self):
-        '''advance state of network on the car level'''
-        pass
+        '''advance state of network on the car level.
+        this is calculating "potential" differential, or the work being done'''
+        return self.max_tick_potential - self.current_tick_potential
 
     def get_snapshot(self):
         '''outputs car location'''
@@ -429,3 +461,15 @@ class Car:
 
     def get_car_type(self):
         return self.car_type
+
+    def get_current_edge(self):
+        return self.current_edge
+    
+    def get_current_pos_meter_car_front(self):
+        return self.current_pos_meter_car_front
+
+    def get_max_tick_potential(self):
+        return self.max_tick_potential
+
+    def get_current_tick_potential(self):
+        return self.current_tick_potential       
