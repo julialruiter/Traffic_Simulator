@@ -22,13 +22,15 @@ if __name__ == "__main__":
     for car in car_config["car_list"]:
         tm.add_car(car)
 
-    with open('snapshot.json', 'w') as f:
-        json.dump(tm.get_snapshot(), f)
+    for tick in range(2):
+        tm.tick()
+        with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
+            json.dump(tm.get_snapshot(), f)
 
-    tm.tick()
+
 
     # tm.get_node_edges_in_out(2)
-    tm.get_snapshot()
+
 
 
 

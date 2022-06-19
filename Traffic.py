@@ -77,7 +77,7 @@ class Network:
         for edge_key in self.edge_ID_to_edge:
             edge = self.edge_ID_to_edge[edge_key]
             edge_raw = edge.get_snapshot()
-            for car_id in edge_raw["waiting_cars"]:  # TODO:  add method for taking cars from "Current_cars" dict
+            for car_id in edge_raw["current_cars"]:  # TODO:  add method for taking cars from "Current_cars" dict
                 car_set.add(car_id)
             edge_snapshots.append(edge_raw)
         snapshot["edges"] = edge_snapshots
@@ -221,10 +221,16 @@ class Node:
 
     def tick(self):
         '''advance state of network on the node level'''
+        for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
+            outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
+            outbound_edge.tick()
+
+
+    def get_inbound_candidates(self):
         outbound_candidates = {}
 
-        for inbound_edge_key in list(self.inbound_edge_ID_to_edge.keys()):
-            inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_key]
+        for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
+            inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
             inbound_edge_current_cars_list = inbound_edge.get_current_cars()
             print("INBOUND_EDGE_CAR_LIST:", inbound_edge_current_cars_list)
             max_dist_per_tick = inbound_edge.get_max_speed()
@@ -291,9 +297,31 @@ class Edge:
         '''advance state of network on the edge level'''
 
         # Sort Current Cars on starting position, ascending
-        self.current_cars.sort(key=lambda x:x[1][0])
-        # tick_car
-        pass
+        self.current_cars.sort(key=lambda x:x[1])
+        # Process any waiting cars
+        for waiting_car in self.waiting_cars:
+            car_id = waiting_car[0]
+            car_object = self.edge_car_ID_to_car[car_id]
+            car_pos_front = waiting_car[1]
+            car_pos_back = car_pos_front - car_object.get_car_length()
+            car_info_list = [car_id, car_pos_front, car_pos_back]
+
+            self.processed_cars.append(car_info_list)
+            car_object.current_edge = self.id
+            car_object.current_pos_meter = car_pos_front
+        self.waiting_cars = []  # remove this later
+
+        # Process current cars on edge --cars do not move yet
+        for current_car in self.current_cars:
+            current_car_id = current_car[0]
+            current_car_object = self.edge_car_ID_to_car[current_car_id]
+            current_car_object.current_pos_meter+=1
+            self.processed_cars.append(current_car)
+        self.current_cars = self.processed_cars
+        self.processed_cars = []
+
+        print(self.id, self.current_cars)
+
 
     def get_snapshot(self):
         raw = copy.deepcopy(self.__dict__)
@@ -341,7 +369,7 @@ class Edge:
         return self.max_capacity
 
     def add_car_to_wait_queue(self, car):
-        car_pos_object = [car.get_car_ID(), [car.get_start_pos_meter(), car.get_end_pos_meter()]]
+        car_pos_object = [car.get_car_ID(), car.get_start_pos_meter()]
         self.waiting_cars.append(car_pos_object)
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
@@ -368,6 +396,8 @@ class Car:
         self.path = path
         self.car_type = car_type
         self.mobile = True  # default.  Toggle to False IFF API call received
+        self.current_edge = None
+        self.current_pos_meter = None
 
     def tick(self):
         '''advance state of network on the car level'''
@@ -376,7 +406,6 @@ class Car:
     def get_snapshot(self):
         '''outputs car location'''
         return self.__dict__
-        pass
 
     def get_car_ID(self):
         return self.id
