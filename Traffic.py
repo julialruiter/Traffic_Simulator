@@ -18,20 +18,12 @@ class TrafficManager:
         while True:
             steps_count += 1
             network_potential = self.graph.tick()
-            # with open(str(self.get_timestamp()) + '_snapshot.json', 'w') as f:
-            #     json.dump(self.get_snapshot(), f)
             if not network_potential:
                 break  # no more movement possible
-            # if network_potential:
-            #     print("Iteration: #", steps_count, "\t Potential:", network_potential)
-            # else:
-            #     print("Iteration: #", steps_count, "\t Potential:", network_potential)
-            #     break
         print("Current Congestion: ", steps_count)
         self.graph.restore_tick_potential()  # refresh for next tick
         return network_potential
-        
-        
+              
 
     def get_snapshot(self):
         '''outputs list of nodes, edges, car locations'''
@@ -44,6 +36,7 @@ class TrafficManager:
         new["edges"] = [k for k in edges.keys()]
         network_raw = self.graph.get_snapshot()
         return network_raw
+
 
     def get_snapshot_deltas(self):
         pass  
@@ -112,16 +105,18 @@ class Network:
             node_snapshots.append(node_raw)
         snapshot["nodes"] = node_snapshots
 
-        car_snapshots = []
+        car_snapshots_current = []
+        car_snapshots_completed = []
         for car_id in car_set:   # cars on edge
             car = self.car_ID_to_car[car_id]
             car_raw = car.get_snapshot()
-            car_snapshots.append(car_raw)
+            car_snapshots_current.append(car_raw)
         for car_id in completed_car_set:    # cars that completed their route on this edge
             car = self.car_ID_to_car[car_id]
             car_raw = car.get_snapshot()
-            car_snapshots.append(car_raw)
-        snapshot["cars"] = car_snapshots
+            car_snapshots_completed.append(car_raw)
+        snapshot["current_cars"] = car_snapshots_current
+        snapshot["completed_cars"] = car_snapshots_completed
         return snapshot
 
     def add_node(self, node):
@@ -402,10 +397,8 @@ class Edge:
                         completed_car_ID = current_car.get_car_ID()
                         self.completed_cars.append(completed_car_ID)
                         self.edge_car_ID_to_car.pop(current_car.get_car_ID())  # TODO:  cars printed from 
-                        # set car status to complete
-
                         # del current_car  # car no longer exists
-                        break
+                        break  # move break statement--it's losing other cars on same edge
                 # otherwise move as far as possible
                 distance_to_advance = min(max_distance_current_tick_potential, prev_car_back - current_car_front)      # no buffer distance
                 distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
