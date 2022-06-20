@@ -237,7 +237,7 @@ class Node:
         candidate_list_dictionary = self.get_inbound_exit_candidates()
         candidate_cars_list = candidate_list_dictionary.values()
         for car in candidate_cars_list:
-            remaining_potential = car.current_tick_potential
+            remaining_potential = car.get_current_tick_potential()
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
             if remaining_potential >= intersection_crossing_cost:
                 car_path = car.get_path()
@@ -260,21 +260,10 @@ class Node:
                 current_edge_object.move_existing_car_to_edge(car)        # reassociate car and edge with each other
                 
 
-
-        # for every car, get next edge in path
-        # if room on next edge, place
-        # else: put back on inbound (key)
-
-
-
         # advance cars on outbound edges as much as possible
         for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
             outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
             expended_energy += outbound_edge.tick()  # move and place new cars
-
-
-        # attempt to place candidates
-        candidate_list_IDs = []
 
 
         # replace remaining candidates on their edge (move occurs on other node tick)
@@ -362,20 +351,26 @@ class Edge:
         # Process current cars on edge --cars do not move yet
         prev_car_back = self.edge_length  # max position a car can travel, resets with each car
         for current_car in self.current_cars:
-            current_car_id = current_car.get_car_ID()
-            current_car_object = self.edge_car_ID_to_car[current_car_id]
+            if current_car.get_current_tick_potential() > 0:  # move only if there is still energy to do so
+                current_car_id = current_car.get_car_ID()
+                current_car_object = self.edge_car_ID_to_car[current_car_id]
 
-            current_car_front = current_car_object.current_pos_meter_car_front
+                current_car_front = current_car_object.current_pos_meter_car_front
+                max_distance_full_tick_potential = self.get_max_speed()
+                max_distance_current_tick_potential = current_car.get_current_tick_potential() * max_distance_full_tick_potential
 
-            distance_to_advance = min(self.max_speed, prev_car_back - current_car_front)      # no buffer distance
-            distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
-            current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
-            current_car.current_pos_meter_car_front += distance_to_advance  # actually move
-            expended_energy += current_car.tick()   # get potential differential
+                distance_to_advance = min(max_distance_current_tick_potential, prev_car_back - current_car_front)      # no buffer distance
+                distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
+                current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
+                current_car.current_pos_meter_car_front += distance_to_advance  # actually move
+                expended_energy += current_car.tick()   # get potential differential
 
-            prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
+                prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
 
-            self.processed_cars.append(current_car)
+                self.processed_cars.append(current_car)
+            else:
+                # car has moved max possible along tick, append to "processed"
+                self.processed_cars.append(current_car)
 
         self.current_cars = self.processed_cars
         self.processed_cars = []
