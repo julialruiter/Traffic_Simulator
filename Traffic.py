@@ -12,20 +12,25 @@ class TrafficManager:
     def tick(self):
         '''advance state of network'''
         self.timestamp += 1  
+        # return self.graph.tick()
 
-        # steps_count = 0
-        # while True:
-        #     steps_count += 1
-        #     network_potential = self.graph.tick()
-        #     # with open(str(self.get_timestamp()) + '_snapshot.json', 'w') as f:
-        #     #     json.dump(self.get_snapshot(), f)
-        #     if network_potential:
-        #         print("Iteration: #", steps_count, "\t Potential:", network_potential)
-        #     else:
-        #         print("Iteration: #", steps_count, "\t Potential:", network_potential)
-        #         break
-
-        return self.graph.tick()
+        steps_count = 0
+        while True:
+            steps_count += 1
+            network_potential = self.graph.tick()
+            # with open(str(self.get_timestamp()) + '_snapshot.json', 'w') as f:
+            #     json.dump(self.get_snapshot(), f)
+            if not network_potential:
+                break  # no more movement possible
+            # if network_potential:
+            #     print("Iteration: #", steps_count, "\t Potential:", network_potential)
+            # else:
+            #     print("Iteration: #", steps_count, "\t Potential:", network_potential)
+            #     break
+        print("Current Congestion: ", steps_count)
+        self.graph.restore_tick_potential()  # refresh for next tick
+        return network_potential
+        
         
 
     def get_snapshot(self):
@@ -221,6 +226,11 @@ class Network:
             expended_energy += node.tick()
 
         return expended_energy
+
+    def restore_tick_potential(self):
+        for car_ID in list(self.car_ID_to_car.keys()):
+            car_object = self.car_ID_to_car[car_ID]
+            car_object.current_tick_potential = car_object.get_max_tick_potential() 
 
 class Node:
     def __init__(self, id) -> None:
@@ -441,7 +451,7 @@ class Edge:
         self.waiting_cars.append(car)
         self.edge_car_ID_to_car[car.get_car_ID()] = car
     def move_existing_car_to_edge(self, car):
-        self.current_cars.append(car)  
+        self.current_cars.append(car)     # CURRENT cars:  putting on processed cars artifically increases congestion metric
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
     def get_current_cars(self):

@@ -21,22 +21,24 @@ if __name__ == "__main__":
 
     for car in car_config["car_list"]:
         tm.add_car(car)
-    count = 0
-    while True:
-        count+=1
-        network_potential = tm.tick()
+
+    # count = 0
+    # while True:
+    #     count+=1
+    #     network_potential = tm.tick()
+    #     with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
+    #         json.dump(tm.get_snapshot(), f)
+    #     if network_potential:
+    #         print("Iteration: #", count, "\t Potential:", network_potential)
+    #     else:
+    #         print("Iteration: #", count, "\t Potential:", network_potential)
+    #         break
+    
+    for tick in range(3):
+        tm.tick()
+        #print("Network Congestion" , tm.tick())
         with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
             json.dump(tm.get_snapshot(), f)
-        if network_potential:
-            print("Iteration: #", count, "\t Potential:", network_potential)
-        else:
-            print("Iteration: #", count, "\t Potential:", network_potential)
-            break
-    
-    for tick in range(1):
-        print("POTENTIAL" , tm.tick())
-        # with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
-        #     json.dump(tm.get_snapshot(), f)
 
 
 
