@@ -252,7 +252,7 @@ class Node:
                 car.current_edge = next_edge_ID                           # associate new edge to car
                 car.current_pos_meter_car_front = 0                       # set to pos = 0 on new edge 
                 car.current_tick_potential -= intersection_crossing_cost  # new potential
-                car.car_path.pop([0])                                     # remove current edge from upcoming path
+                car.path.pop(0)                                     # remove current edge from upcoming path
             else:
                 # place car back on original edge
                 current_edge = car.get_current_edge()
