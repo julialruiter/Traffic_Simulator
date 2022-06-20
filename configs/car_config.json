@@ -16,7 +16,7 @@
             "car_ID": 7001,
             "car_length": 2.5, 
             "start_edge": 5000,
-            "start_pos_meter": 21,            
+            "start_pos_meter": 20,            
             "end_edge": 5002,
             "end_pos_meter": 6.5,
             "path": [
