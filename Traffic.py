@@ -33,7 +33,7 @@ class TrafficManager:
     def get_timestamp(self):
         return self.timestamp  
 
-    def get_node_edges_in_out(self, node_ID):   # todo:  move to node
+    def get_node_edges_in_out(self, node_ID):  
         node = self.graph.get_node_from_id(node_ID)
         inbound_edge_list = list(node.get_node_inbound())
         outbound_edge_list = list(node.get_node_outbound())
@@ -117,11 +117,11 @@ class Network:
             if new_edge.get_end_node_id() in self.node_ID_to_node:
                 start_node = self.node_ID_to_node[new_edge.get_start_node_id()]
                 new_edge.set_start_node(start_node)
-                start_node.add_to_inbound(new_edge)
+                start_node.add_to_outbound(new_edge)
 
                 end_node = self.node_ID_to_node[new_edge.get_end_node_id()]
                 new_edge.set_end_node(end_node)
-                end_node.add_to_outbound(new_edge)
+                end_node.add_to_inbound(new_edge)
 
                 self.edge_ID_to_edge[new_edge.get_edge_ID()] = new_edge
             else:
@@ -230,9 +230,37 @@ class Node:
 
     def tick(self):
         '''advance state of network on the node level'''
+        print("Current Node Tick: ", self.id)
         expended_energy = 0
+        intersection_crossing_cost = self.intersection_time_cost  # absorbs time delay for crossing intersection
         # look for inbound_exit_candidates
         candidate_list_dictionary = self.get_inbound_exit_candidates()
+        candidate_cars_list = candidate_list_dictionary.values()
+        for car in candidate_cars_list:
+            remaining_potential = car.current_tick_potential
+            # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
+            if remaining_potential >= intersection_crossing_cost:
+                car_path = car.get_path()
+                next_edge_ID = car_path[0]        # not removing yet
+                print("Node Outbound Dict:", self.outbound_edge_ID_to_edge)
+                print(next_edge_ID)
+                next_edge_object = self.outbound_edge_ID_to_edge[next_edge_ID]
+                print(self.outbound_edge_ID_to_edge)
+                print(next_edge_object)
+
+                next_edge_object.move_existing_car_to_edge(car)           # associate car to new edge
+                car.current_edge = next_edge_ID                           # associate new edge to car
+                car.current_pos_meter_car_front = 0                       # set to pos = 0 on new edge 
+                car.current_tick_potential -= intersection_crossing_cost  # new potential
+                car.car_path.pop([0])                                     # remove current edge from upcoming path
+            else:
+                # place car back on original edge
+                current_edge = car.get_current_edge()
+                current_edge_object = self.inbound_edge_ID_to_edge[current_edge]
+                current_edge_object.move_existing_car_to_edge(car)        # reassociate car and edge with each other
+                
+
+
         # for every car, get next edge in path
         # if room on next edge, place
         # else: put back on inbound (key)
@@ -242,9 +270,6 @@ class Node:
         # advance cars on outbound edges as much as possible
         for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
             outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
-
-
-    
             expended_energy += outbound_edge.tick()  # move and place new cars
 
 
@@ -271,11 +296,11 @@ class Node:
                     inbound_edge.edge_car_ID_to_car.pop(car.get_car_ID())
 
                 
-        print("N: ", self.id ,"\tob: ", outbound_candidates)
+        print("N: ", self.id ,"\tcars trying to leave : ", outbound_candidates)
         return outbound_candidates
 
 
-    def change_stoplight(self):   # todoL  deal with later
+    def change_stoplight(self):   # TODO:  future implementation
         '''toggle which edges in and out can move'''
         pass
 
@@ -344,17 +369,13 @@ class Edge:
 
             distance_to_advance = min(self.max_speed, prev_car_back - current_car_front)      # no buffer distance
             distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
-            current_car_object.current_tick_potential = 1 - distance_to_advance_ticks  # TODO:  
+            current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
             current_car.current_pos_meter_car_front += distance_to_advance  # actually move
             expended_energy += current_car.tick()   # get potential differential
 
             prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
 
-            # if not car_front >= self.edge_length:
-            #     current_car_object.current_pos_meter_car_front += 1
-            #     expended_energy += 1 # TODO. THIS SHOULD GET POTENTIAL
             self.processed_cars.append(current_car)
-
 
         self.current_cars = self.processed_cars
         self.processed_cars = []
@@ -409,6 +430,9 @@ class Edge:
 
     def add_car_to_wait_queue(self, car):
         self.waiting_cars.append(car)
+        self.edge_car_ID_to_car[car.get_car_ID()] = car
+    def move_existing_car_to_edge(self, car):
+        self.current_cars.append(car)
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
     def get_current_cars(self):
