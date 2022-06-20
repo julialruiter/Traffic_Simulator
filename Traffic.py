@@ -91,14 +91,17 @@ class Network:
     def get_snapshot(self):
         '''outputs list of nodes, edges'''
         car_set = set()
+        completed_car_set = set()
         snapshot = {}
 
         edge_snapshots = []
         for edge_key in self.edge_ID_to_edge:
             edge = self.edge_ID_to_edge[edge_key]
             edge_raw = edge.get_snapshot()
-            for car_id in edge_raw["current_cars"]:  # TODO:  add method for taking cars from "Current_cars" dict
+            for car_id in edge_raw["current_cars"]:  
                 car_set.add(car_id)
+            for car_id in edge_raw["completed_cars"]:  
+                completed_car_set.add(car_id)
             edge_snapshots.append(edge_raw)
         snapshot["edges"] = edge_snapshots
 
@@ -110,7 +113,11 @@ class Network:
         snapshot["nodes"] = node_snapshots
 
         car_snapshots = []
-        for car_id in car_set:
+        for car_id in car_set:   # cars on edge
+            car = self.car_ID_to_car[car_id]
+            car_raw = car.get_snapshot()
+            car_snapshots.append(car_raw)
+        for car_id in completed_car_set:    # cars that completed their route on this edge
             car = self.car_ID_to_car[car_id]
             car_raw = car.get_snapshot()
             car_snapshots.append(car_raw)
@@ -283,14 +290,10 @@ class Node:
                 current_edge_object = self.inbound_edge_ID_to_edge[current_edge]
                 current_edge_object.move_existing_car_to_edge(car)        # reassociate car and edge with each other
                 
-
         # advance cars on outbound edges as much as possible
         for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
             outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
             expended_energy += outbound_edge.tick()  # move and place new cars
-
-
-        # replace remaining candidates on their edge (move occurs on other node tick)
 
         return expended_energy
 
@@ -349,6 +352,7 @@ class Edge:
         self.current_cars = []
         self.waiting_cars = []
         self.processed_cars = []
+        self.completed_cars = []
 
     def set_start_node(self, node_ptr):
         self.start_node = node_ptr
@@ -372,8 +376,9 @@ class Edge:
             expended_energy += waiting_car.get_max_tick_potential()
         self.waiting_cars = []  # remove this later
 
-        # Process current cars on edge --cars do not move yet
+        # Process current cars on edge
         prev_car_back = self.edge_length  # max position a car can travel, resets with each car
+
         for current_car in self.current_cars:
             if current_car.get_current_tick_potential() > 0:  # move only if there is still energy to do so
                 current_car_id = current_car.get_car_ID()
@@ -383,6 +388,24 @@ class Edge:
                 max_distance_full_tick_potential = self.get_max_speed()
                 max_distance_current_tick_potential = current_car.get_current_tick_potential() * max_distance_full_tick_potential
 
+                # check if car on destination edge
+                if current_car.get_end_edge() == self.id:
+                    exit_potition = current_car.get_end_pos_meter()
+                    dist_to_exit = exit_potition - current_car_front
+                    if dist_to_exit < min(max_distance_current_tick_potential, prev_car_back - current_car_front):
+                        # set positions to destination
+                        current_car.current_pos_meter_car_front = exit_potition
+                        current_car.current_edge = current_car.get_end_edge()
+                        # car exits -- append to completed_cars and remove from further processing
+                        current_car.route_status = 'Route Completed'
+                        completed_car_ID = current_car.get_car_ID()
+                        self.completed_cars.append(completed_car_ID)
+                        self.edge_car_ID_to_car.pop(current_car.get_car_ID())  # TODO:  cars printed from 
+                        # set car status to complete
+
+                        # del current_car  # car no longer exists
+                        break
+                # otherwise move as far as possible
                 distance_to_advance = min(max_distance_current_tick_potential, prev_car_back - current_car_front)      # no buffer distance
                 distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
                 current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
@@ -392,6 +415,7 @@ class Edge:
                 prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
 
                 self.processed_cars.append(current_car)
+
             else:
                 # car has moved max possible along tick, append to "processed"
                 self.processed_cars.append(current_car)
@@ -477,6 +501,7 @@ class Car:
         self.path = path
         self.car_type = car_type
         self.mobile = True  # default.  Toggle to False IFF API call received
+        self.route_status = 'in progress'
 
         self.current_edge = None
         self.current_pos_meter_car_front = None 

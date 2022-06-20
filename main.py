@@ -34,7 +34,7 @@ if __name__ == "__main__":
     #         print("Iteration: #", count, "\t Potential:", network_potential)
     #         break
     
-    for tick in range(3):
+    for tick in range(6):
         tm.tick()
         #print("Network Congestion" , tm.tick())
         with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
