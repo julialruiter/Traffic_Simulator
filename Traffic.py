@@ -374,6 +374,7 @@ class Edge:
             waiting_car.current_pos_meter_car_front = car_pos_front
             self.processed_cars.append(waiting_car)
             expended_energy += waiting_car.get_max_tick_potential()
+            waiting_car.current_tick_potential = 0   # all energy used setting
         self.waiting_cars = []  # remove this later
 
         # Process current cars on edge

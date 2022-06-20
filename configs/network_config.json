@@ -27,7 +27,7 @@
             "end_node": 3,
             "edge_ID": 5001,
             "edge_length": 36,
-            "max_speed": 10, 
+            "max_speed": 6, 
             "max_capacity": 5
         },
         {
@@ -35,7 +35,7 @@
             "end_node": 4,
             "edge_ID": 5002,
             "edge_length": 23,
-            "max_speed": 10, 
+            "max_speed": 4, 
             "max_capacity": 3
         }
     ]
