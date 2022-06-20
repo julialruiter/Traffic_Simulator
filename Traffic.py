@@ -11,7 +11,20 @@ class TrafficManager:
     
     def tick(self):
         '''advance state of network'''
-        self.timestamp += 1
+        self.timestamp += 1  
+
+        # steps_count = 0
+        # while True:
+        #     steps_count += 1
+        #     network_potential = self.graph.tick()
+        #     # with open(str(self.get_timestamp()) + '_snapshot.json', 'w') as f:
+        #     #     json.dump(self.get_snapshot(), f)
+        #     if network_potential:
+        #         print("Iteration: #", steps_count, "\t Potential:", network_potential)
+        #     else:
+        #         print("Iteration: #", steps_count, "\t Potential:", network_potential)
+        #         break
+
         return self.graph.tick()
         
 
@@ -63,6 +76,7 @@ class Network:
         self.edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.car_ID_to_car = collections.defaultdict(lambda: None)
         self.potential = None
+
         for node in config["node_list"]:
             self.add_node(node)
         # print(self.node_ID_to_node)
@@ -427,7 +441,7 @@ class Edge:
         self.waiting_cars.append(car)
         self.edge_car_ID_to_car[car.get_car_ID()] = car
     def move_existing_car_to_edge(self, car):
-        self.current_cars.append(car)
+        self.current_cars.append(car)  
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
     def get_current_cars(self):
