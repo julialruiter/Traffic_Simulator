@@ -17,22 +17,11 @@ if __name__ == "__main__":
     except Exception as E:
         print(E)
 
+
     tm = TrafficManager(network_config)
 
     for car in car_config["car_list"]:
         tm.add_car(car)
-
-    # count = 0
-    # while True:
-    #     count+=1
-    #     network_potential = tm.tick()
-    #     with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
-    #         json.dump(tm.get_snapshot(), f)
-    #     if network_potential:
-    #         print("Iteration: #", count, "\t Potential:", network_potential)
-    #     else:
-    #         print("Iteration: #", count, "\t Potential:", network_potential)
-    #         break
     
     for tick in range(6):
         tm.tick()
@@ -40,6 +29,10 @@ if __name__ == "__main__":
         with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
             json.dump(tm.get_snapshot(), f)
 
+    tm.remove_car(7000)
+    tm.tick()
+    with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
+            json.dump(tm.get_snapshot(), f)
 
 
     # tm.get_node_edges_in_out(2)

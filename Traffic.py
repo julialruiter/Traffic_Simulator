@@ -10,23 +10,22 @@ class TrafficManager:
         pass
     
     def tick(self):
-        '''advance state of network'''
+        '''API function:  advance state of network by one unit of time.'''
         self.timestamp += 1  
-        # return self.graph.tick()
-
         steps_count = 0
         while True:
             steps_count += 1
             network_potential = self.graph.tick()
             if not network_potential:
                 break  # no more movement possible
-        print("Current Congestion: ", steps_count)
+        print("Steps needed to process tick: ", steps_count)
         self.graph.restore_tick_potential()  # refresh for next tick
         return network_potential
               
 
     def get_snapshot(self):
-        '''outputs list of nodes, edges, car locations'''
+        '''API function:  outputs list of nodes, edge attributes, car attributes.
+        Output is formatted in such a way that it can be used as input for a new simulation.'''
         raw = copy.deepcopy(self.__dict__)
         raw_graph = raw["graph"]
         nodes =  raw_graph.__dict__.pop("node_ID_to_node", None)
@@ -39,12 +38,16 @@ class TrafficManager:
 
 
     def get_snapshot_deltas(self):
+        '''API function:  list of changes from previous state.  
+        Will be created in future versions.'''
         pass  
 
     def get_timestamp(self):
+        '''API function:  returns (sequantial) state number.'''
         return self.timestamp  
 
     def get_node_edges_in_out(self, node_ID):  
+        '''API function:  lists the IDs of inbound and outbound edges for a particular node.'''
         node = self.graph.get_node_from_id(node_ID)
         inbound_edge_list = list(node.get_node_inbound())
         outbound_edge_list = list(node.get_node_outbound())
@@ -55,11 +58,25 @@ class TrafficManager:
         # print(node_output)
 
     def add_car(self, car):
+        '''API function:  place car (dictionary object) onto the network's waiting queue.'''
         if self.graph.check_valid_car(car) == True:
             self.graph.add_car(car)
 
     def remove_car(self, car_id):
-        pass
+        '''API function:  removes the car associated with 'car_id' from the simulation.
+        This is done by forcing it into the 'Route Completed' state.'''
+        if not car_id in self.graph.car_ID_to_car:
+            raise Exception("There is no car with this ID.")
+
+        car_object = self.graph.car_ID_to_car[car_id]
+        car_edge_ID = car_object.get_current_edge()
+        car_edge = self.graph.edge_ID_to_edge[car_edge_ID]
+
+        car_object.route_status = 'Route Completed'
+        car_edge.completed_cars.append(car_id)
+
+        car_edge.current_cars.remove(car_object)
+        car_edge.edge_car_ID_to_car.pop(car_id) 
 
     def resume_car(self, car_id):
         pass
@@ -388,7 +405,7 @@ class Edge:
                 if current_car.get_end_edge() == self.id:
                     exit_potition = current_car.get_end_pos_meter()
                     dist_to_exit = exit_potition - current_car_front
-                    
+
                     if dist_to_exit < min(max_distance_current_tick_potential, prev_car_back - current_car_front):
                         # set positions to destination
                         current_car.current_pos_meter_car_front = exit_potition
@@ -398,7 +415,7 @@ class Edge:
                         current_car.route_status = 'Route Completed'
                         completed_car_ID = current_car.get_car_ID()
                         self.completed_cars.append(completed_car_ID)
-                        self.edge_car_ID_to_car.pop(current_car.get_car_ID())  
+                        self.edge_car_ID_to_car.pop(completed_car_ID)  
                         # del current_car  # car no longer exists
                     else:
                         # otherwise move as far as possible (exit further than travel distance)
