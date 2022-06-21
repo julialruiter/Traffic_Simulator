@@ -5,27 +5,46 @@ import random
 
 class TrafficManager:
     def __init__(self, network_config) -> None:
+        '''Establishes an instance of TrafficManager to run on the given network structure.
+        '''
         self.graph = Network(network_config)
         self.timestamp = 0
-        pass
+        
     
     def tick(self):
-        '''API function:  advance state of network by one unit of time.'''
+        '''API function:  advance state of network by one unit of time.
+        '''
         self.timestamp += 1  
         steps_count = 0
+        total_potential_used_on_tick = 0
+
+        expended_energy = 0                       # work actually done
+        sum_maximum_expendible_energy = 0         # maximum work possible
+        energy_used_percent = 0
+
         while True:
             steps_count += 1
-            network_potential = self.graph.tick()
-            if not network_potential:
-                break  # no more movement possible
+
+            network_tick_outputs = self.graph.tick()
+            expended_energy += network_tick_outputs[0]
+            sum_maximum_expendible_energy += network_tick_outputs[1]
+            if not network_tick_outputs[0]:
+                # no more movement possible
+                break             
+
         print("Steps needed to process tick: ", steps_count)
-        self.graph.restore_tick_potential()  # refresh for next tick
-        return network_potential
+        self.graph.restore_tick_potential()      # refresh for next tick
+
+        if sum_maximum_expendible_energy != 0:
+            energy_used_percent = expended_energy / sum_maximum_expendible_energy
+        print("Percent of available energy used on tick: ", energy_used_percent)
+        return energy_used_percent
               
 
     def get_snapshot(self):
         '''API function:  outputs list of nodes, edge attributes, car attributes.
-        Output is formatted in such a way that it can be used as input for a new simulation.'''
+        Output is formatted in such a way that it can be used as input for a new simulation.
+        '''
         raw = copy.deepcopy(self.__dict__)
         raw_graph = raw["graph"]
         nodes =  raw_graph.__dict__.pop("node_ID_to_node", None)
@@ -39,15 +58,18 @@ class TrafficManager:
 
     def get_snapshot_deltas(self):
         '''API function:  list of changes from previous state.  
-        Will be created in future versions.'''
+        Will be created in future versions.
+        '''
         pass  
 
     def get_timestamp(self):
-        '''API function:  returns (sequantial) state number.'''
+        '''API function:  returns (sequantial) state number.
+        '''
         return self.timestamp  
 
     def get_node_edges_in_out(self, node_ID):  
-        '''API function:  lists the IDs of inbound and outbound edges for a particular node.'''
+        '''API function:  lists the IDs of inbound and outbound edges for a particular node.
+        '''
         node = self.graph.get_node_from_id(node_ID)
         inbound_edge_list = list(node.get_node_inbound())
         outbound_edge_list = list(node.get_node_outbound())
@@ -58,13 +80,15 @@ class TrafficManager:
         # print(node_output)
 
     def add_car(self, car):
-        '''API function:  place car (dictionary object) onto the network's waiting queue.'''
+        '''API function:  place car (dictionary object) onto the network's waiting queue.
+        '''
         if self.graph.check_valid_car(car) == True:
             self.graph.add_car(car)
 
     def remove_car(self, car_id):
         '''API function:  removes the Car associated with 'car_id' from the simulation.
-        This is done by forcing it into Car.status = 'Removed from simulation'.'''
+        This is done by forcing it into Car.status = 'Removed from simulation'.
+        '''
         if not car_id in self.graph.car_ID_to_car:
             raise Exception("There is no car associated with this ID.")
 
@@ -81,7 +105,8 @@ class TrafficManager:
 
     def pause_car(self, car_id):
         '''API function:  forefully halts the Car associated with 'car_id' until a 'resume_car' call is received.
-        No cars behind it may pass.'''
+        No cars behind it may pass.
+        '''
         if not car_id in self.graph.car_ID_to_car:
             raise Exception("There is no car associated with this ID.")
 
@@ -90,7 +115,8 @@ class TrafficManager:
         car_object.route_status = 'Paused'        
 
     def resume_car(self, car_id):
-        '''API function:  allows the Car associated with 'car_id' to resume moving.'''
+        '''API function:  allows the Car associated with 'car_id' to resume moving.
+        '''
         if not car_id in self.graph.car_ID_to_car:
             raise Exception("There is no car associated with this ID.")
             
@@ -101,6 +127,8 @@ class TrafficManager:
 
 class Network:
     def __init__(self, config) -> None:
+        '''Contains all functions and attributes pertaining to the (road) network as a whole.
+        '''
         self.node_ID_to_node = collections.defaultdict(lambda: None)
         self.edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.car_ID_to_car = collections.defaultdict(lambda: None)
@@ -108,12 +136,12 @@ class Network:
 
         for node in config["node_list"]:
             self.add_node(node)
-        # print(self.node_ID_to_node)
         for edge in config["edge_list"]:
             self.add_edge(edge)
 
     def get_snapshot(self):
-        '''outputs list of nodes, edges'''
+        '''Outputs dictionary containing snapshot data for all nodes and edges in the network.
+        '''
         car_set = set()
         completed_car_set = set()
         snapshot = {}
@@ -151,14 +179,17 @@ class Network:
         return snapshot
 
     def add_node(self, node):
-        '''imports from node dictionary'''
+        '''Imports node(s) from given node dictionary and adds them to the network.
+        '''
         new_node = Node(node["node_ID"])
         if self.node_ID_to_node[new_node.get_node_ID()]:
             raise Exception("There is already a Node with this ID")
         self.node_ID_to_node[new_node.get_node_ID()] = new_node
 
     def add_edge(self, edge):
-        '''imports from edge dictionary'''
+        '''Imports edge(s) from given edge dictionary.
+        If both the start and end nodes are already in the network, then the edge will be added.
+        '''
         new_edge = Edge(edge["edge_ID"],
                         edge["start_node"],
                         edge["end_node"],
@@ -177,11 +208,13 @@ class Network:
 
                 self.edge_ID_to_edge[new_edge.get_edge_ID()] = new_edge
             else:
-                raise Exception("End Node ID DNE")
+                raise Exception("End Node ID is not part of the network.")
         else:
-            raise Exception("Start Node ID DNE")
+            raise Exception("Start Node ID is not part of the network.")
 
     def add_car(self, car):
+        '''Places car (object) on the waiting queue for its specified start_edge.
+        '''
         new_car = Car(car["car_ID"],
                         car["car_length"],
                         car["start_edge"],
@@ -198,6 +231,8 @@ class Network:
 
 
     def check_valid_car(self, car):
+        '''Returns a detailed Exception if the given car does not conform to expected input structure.
+        '''
         car_ID = car["car_ID"]  # check uniqueness
         if car_ID in list(self.car_ID_to_car.keys()):
             raise Exception("That car ID already exists.")
@@ -228,45 +263,56 @@ class Network:
         
 
     def remove_node(self, node):
+        '''Placeholder for future software version:
+        Will remove a Node and all of its associated inbound/outbound Edges from the Network.
+        '''
         # raise exception: not implemented yet
         pass
 
     def remove_edge(self, edge):
+        '''Placeholder for future software version:
+        Will remove an Edge and all of its associated Cars from the Network.
+        '''
         # raise exception: not implemented yet
         pass
 
     def get_node_from_id(self, node_id):
-        '''get object from ID'''
+        '''Uses Network.node_ID_to_node dictionary to map a Node IDs to its corresponding Node object.
+        '''
         return self.node_ID_to_node[node_id]
 
     def get_edge_id(self, edge_id):
-        '''get object from ID'''
+        '''Uses Network.edge_ID_to_edge dictionary to map an Edge ID to its corresponding Edge object.
+        '''
         return self.edge_ID_to_edge[edge_id]
 
     def tick(self):
-        # tick_node
+        '''Shuffles the order in which Nodes will be processed with each tick to ensure no node is favored.
+        '''
         node_keys = list(self.node_ID_to_node.keys())
+        expended_energy = 0                       # work actually done
+        sum_maximum_expendible_energy = 0         # maximum work possible
 
-        # count "potential"
-        # do node tick
-        # count new "potential"
-        # while not equal, tick and compare
-        expended_energy = 0
         random.shuffle(node_keys)
         for node_key in node_keys:
             node = self.node_ID_to_node[node_key]
-            # print(node)
-            expended_energy += node.tick()
+            node_tick_outputs = node.tick()
+            expended_energy += node_tick_outputs[0]
+            sum_maximum_expendible_energy += node_tick_outputs[1]
 
-        return expended_energy
+        return expended_energy, sum_maximum_expendible_energy
 
     def restore_tick_potential(self):
+        '''Resets the tick_potential to its maximum value for all Cars on the Network.
+        '''
         for car_ID in list(self.car_ID_to_car.keys()):
             car_object = self.car_ID_to_car[car_ID]
             car_object.current_tick_potential = car_object.get_max_tick_potential() 
 
 class Node:
     def __init__(self, id) -> None:
+        '''Contains all functions and attributes pertaining to a network intersection (Node).
+        '''
         self.id = id
         self.inbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
@@ -280,16 +326,22 @@ class Node:
         self.outbound_edge_ID_to_edge[edge.get_edge_ID()] = edge
 
     def get_snapshot(self):
+        '''Outputs dictionary of Node attributes.
+        Current version only returns ID; future versions will include stoplight information.
+        '''
         raw = copy.deepcopy(self.__dict__)
         return {"id": self.id}
         #  TODO:  use the deepcopy when implmenting inbound and outbound
 
 
     def tick(self):
-        '''advance state of network on the node level'''
+        '''Facillitates Edge ticks and movement of Car objects from one Edge to another.
+        Each Node tick '''
         print("Current Node Tick: ", self.id)
-        expended_energy = 0
+        expended_energy = 0                       # work actually done
+        sum_maximum_expendible_energy = 0         # maximum work possible
         intersection_crossing_cost = self.intersection_time_cost  # absorbs time delay for crossing intersection
+
         # look for inbound_exit_candidates
         candidate_list_dictionary = self.get_inbound_exit_candidates()
         candidate_cars_list = candidate_list_dictionary.values()
@@ -298,37 +350,40 @@ class Node:
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
             if remaining_potential >= intersection_crossing_cost:
                 car_path = car.get_path()
-                next_edge_ID = car_path[0]        # not removing yet
-                print("Node Outbound Dict:", self.outbound_edge_ID_to_edge)
-                print(next_edge_ID)
+                next_edge_ID = car_path[0]      
+                # print("Node Outbound Dict:", self.outbound_edge_ID_to_edge)
+                # print(next_edge_ID)
                 next_edge_object = self.outbound_edge_ID_to_edge[next_edge_ID]
-                print(self.outbound_edge_ID_to_edge)
-                print(next_edge_object)
+                # print(self.outbound_edge_ID_to_edge)
+                # print(next_edge_object)
 
-                next_edge_object.move_existing_car_to_edge(car)           # associate car to new edge
-                car.current_edge = next_edge_ID                           # associate new edge to car
-                car.current_pos_meter_car_front = 0                       # set to pos = 0 on new edge 
-                car.current_tick_potential -= intersection_crossing_cost  # new potential
-                car.path.pop(0)                                     # remove current edge from upcoming path
+                # move to position 0 at new edge
+                next_edge_object.move_existing_car_to_edge(car)           
+                car.current_edge = next_edge_ID                           
+                car.current_pos_meter_car_front = 0                       
+                car.current_tick_potential -= intersection_crossing_cost 
+                car.path.pop(0)                                           # remove current edge from upcoming path
             else:
                 # place car back on original edge
                 current_edge = car.get_current_edge()
                 current_edge_object = self.inbound_edge_ID_to_edge[current_edge]
                 current_edge_object.move_existing_car_to_edge(car)        # reassociate car and edge with each other
                 
-        # advance cars on outbound edges as much as possible
+        # advance existing cars on outbound edges as much as possible
         for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
             outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
-            expended_energy += outbound_edge.tick()  # move and place new cars
-
-        return expended_energy
+            edge_tick_outputs = outbound_edge.tick()  # move and place new cars, returning list [expended, max] energy
+            expended_energy += edge_tick_outputs[0]
+            sum_maximum_expendible_energy += edge_tick_outputs[1]
+        return expended_energy, sum_maximum_expendible_energy
 
     def get_inbound_exit_candidates(self):
         outbound_candidates = collections.defaultdict(lambda: None)
         for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
             inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
             inbound_edge_current_cars_list = inbound_edge.get_current_cars()
-            print("N", self.get_node_ID(), " EDGE INBOUND: ", inbound_edge_ID, ":" ,inbound_edge_current_cars_list)
+
+            # print("N", self.get_node_ID(), " EDGE INBOUND: ", inbound_edge_ID, ":" ,inbound_edge_current_cars_list)
             for car in inbound_edge_current_cars_list:
                 current_front_pos = car.get_current_pos_meter_car_front()
                 if current_front_pos == inbound_edge.get_length():
@@ -341,8 +396,10 @@ class Node:
         return outbound_candidates
 
 
-    def change_stoplight(self):   # TODO:  future implementation
-        '''toggle which edges in and out can move'''
+    def change_stoplight(self):  
+        '''Toggles which edges allow cars to exit.
+        Will be created in future versions.
+        '''
         pass
 
     def get_node_ID(self):
@@ -360,34 +417,43 @@ class Edge:
                  start_node_id, 
                  end_node_id, 
                  edge_length, 
-                 max_speed = 6,  # default value 6 m/s
-                 max_capacity = inf
-                 ) -> None:  # NOTE:  adjust if more fields required
-        # self.start_node_ID_to_node = collections.defaultdict(lambda: None)   # not actually needed 
-        # self.end_node_ID_to_node = collections.defaultdict(lambda: None)    # for neighbours
-        self.edge_car_ID_to_car = collections.defaultdict(lambda: None)
+                 max_speed = 0.028,           # default value 0.028 m/s, or about 100 km/h
+                 max_capacity = inf           # inf implies no metering/no artificial limit on number of cars allowed on road segment
+                 ) -> None:                   # NOTE:  adjust if more fields required
+        '''Contains all functions and attributes pertaining to a road segment (Edge).
+        '''
         self.id = id
+
         self.start_node_id = start_node_id
         self.end_node_id = end_node_id
+        self.start_node = self.end_node = None 
         self.edge_length = edge_length
+        # self.end_node_ID_to_node = collections.defaultdict(lambda: None)    # for neighbours    
+
         self.max_speed = max_speed
         self.max_capacity = max_capacity
 
-        self.start_node = self.end_node = None    # Default to None
+        self.edge_car_ID_to_car = collections.defaultdict(lambda: None)
         self.current_cars = []
         self.waiting_cars = []
         self.processed_cars = []
         self.completed_cars = []
 
+
     def set_start_node(self, node_ptr):
+        '''Associates (start) Node pointer with Edge object.
+        '''
         self.start_node = node_ptr
 
     def set_end_node(self, node_ptr):
+        '''Associates (end) Node pointer with Edge object.
+        '''
         self.end_node = node_ptr
 
     def tick(self):
         '''advance state of network on the edge level'''
-        expended_energy = 0
+        expended_energy = 0                       # work actually done
+        sum_maximum_expendible_energy = 0         # maximum work possible
 
         # Sort Current Cars on starting position, ascending
         self.current_cars.sort(key=lambda x:x.current_pos_meter_car_front, reverse=True)
@@ -399,6 +465,7 @@ class Edge:
             waiting_car.current_pos_meter_car_front = car_pos_front
             self.processed_cars.append(waiting_car)
             expended_energy += waiting_car.get_max_tick_potential()
+            sum_maximum_expendible_energy += waiting_car.get_max_tick_potential()
             waiting_car.current_tick_potential = 0   # all energy used setting
         self.waiting_cars = []  # remove this later
 
@@ -406,17 +473,17 @@ class Edge:
         prev_car_back = self.edge_length  # max position a car can travel, resets with each car
 
         for current_car in self.current_cars:
+            current_car_id = current_car.get_car_ID()
+            current_car_object = self.edge_car_ID_to_car[current_car_id]
+            old_potential = current_car_object.get_current_tick_potential()
+            sum_maximum_expendible_energy += old_potential
+
             if current_car.mobile == False:
                 # car is halted and cannot move
-                current_car_id = current_car.get_car_ID()
-                current_car_object = self.edge_car_ID_to_car[current_car_id]
                 current_car_object.current_tick_potential = 0
                 self.processed_cars.append(current_car)
 
             elif current_car.get_current_tick_potential() > 0:  # move only if there is still energy to do so
-                current_car_id = current_car.get_car_ID()
-                current_car_object = self.edge_car_ID_to_car[current_car_id]
-
                 current_car_front = current_car_object.current_pos_meter_car_front
                 max_distance_full_tick_potential = self.get_max_speed()
                 max_distance_current_tick_potential = current_car.get_current_tick_potential() * max_distance_full_tick_potential
@@ -443,7 +510,7 @@ class Edge:
                         distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
                         current_car_object.current_tick_potential -= distance_to_advance_ticks  
                         current_car.current_pos_meter_car_front += distance_to_advance  # actually move
-                        expended_energy += current_car.tick()   # get potential differential
+                        expended_energy += current_car.tick(old_potential)   # get potential differential
                         prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
 
                         self.processed_cars.append(current_car)
@@ -453,7 +520,7 @@ class Edge:
                     distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
                     current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
                     current_car.current_pos_meter_car_front += distance_to_advance  # actually move
-                    expended_energy += current_car.tick()   # get potential differential
+                    expended_energy += current_car.tick(old_potential)   # get potential differential
                     prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
 
                     self.processed_cars.append(current_car)
@@ -465,10 +532,13 @@ class Edge:
         # edge done processing, set up for next tick
         self.current_cars = self.processed_cars
         self.processed_cars = []
-        return expended_energy
+        return expended_energy, sum_maximum_expendible_energy
 
 
     def get_snapshot(self):
+        '''Outputs dictionary of Edge attributes, including lists of Cars that are:
+        currently on the Edge, waiting to enter the Edge, or completed their trip on this Edge.
+        '''
         raw = copy.deepcopy(self.__dict__)
         raw.pop("start_node")
         raw.pop("end_node")
@@ -513,15 +583,18 @@ class Edge:
     def get_max_capacity(self):
         return self.max_capacity
 
+    def get_current_cars(self):
+        return self.current_cars
+
     def add_car_to_wait_queue(self, car):
+        '''Adds Car object to the waiting queue and links Car to Edge on Car ID.'''
         self.waiting_cars.append(car)
         self.edge_car_ID_to_car[car.get_car_ID()] = car
     def move_existing_car_to_edge(self, car):
-        self.current_cars.append(car)     # CURRENT cars:  putting on processed cars artifically increases congestion metric
+        '''Adds Car object to the 'processed-cars' list and links Car to (new) Edge on Car ID.'''
+        self.processed_cars.append(car)     # CURRENT cars:  putting on processed cars artifically increases congestion metric
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
-    def get_current_cars(self):
-        return self.current_cars
 
 class Car:
     def __init__(self, 
@@ -533,7 +606,8 @@ class Car:
                  end_pos_meter,
                  path,
                  car_type) -> None:
-
+        '''Contains all functions and attributes pertaining to an object traversing the Network (Car).
+        '''
         self.id = car_ID
         self.car_length = car_length
         self.start_edge = start_edge
@@ -542,8 +616,8 @@ class Car:
         self.end_pos_meter = end_pos_meter
         self.path = path
         self.car_type = car_type
-        self.mobile = True  # default.  Toggle to False IFF API call received
-        self.route_status = 'In progress'
+        self.mobile = True          # Default.  Toggle to False IFF API call received
+        self.route_status = 'In progress'   # Default.  There are also 'Paused' and 'Completed' states.
 
         self.current_edge = None
         self.current_pos_meter_car_front = None 
@@ -551,13 +625,14 @@ class Car:
         self.current_tick_potential = 1
 
 
-    def tick(self):
-        '''advance state of network on the car level.
-        this is calculating "potential" differential, or the work being done'''
-        return self.max_tick_potential - self.current_tick_potential
+    def tick(self, old_potential):
+        '''Calculates "potential" differential;
+        This is the portion of a full tick movement completed by the Car on this tick.'''
+        return old_potential - self.current_tick_potential
 
     def get_snapshot(self):
-        '''outputs car location'''
+        '''Outputs dictionary of Car attributes.
+        '''
         return self.__dict__
 
     def get_car_ID(self):
