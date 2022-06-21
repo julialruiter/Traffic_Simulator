@@ -46,12 +46,35 @@
 <font color="#000000" face="helvetica, arial"><a name="Car">class <strong>Car</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt><a href="#Car">Car</a>(car_ID,&nbsp;car_length,&nbsp;start_edge,&nbsp;start_pos_meter,&nbsp;end_edge,&nbsp;end_pos_meter,&nbsp;path,&nbsp;car_type)&nbsp;-&amp;gt;&nbsp;None<br>
+<td colspan=2><tt><a href="#Car">Car</a>(car_ID,&nbsp;car_length,&nbsp;start_edge,&nbsp;start_pos_meter,&nbsp;end_edge,&nbsp;end_pos_meter,&nbsp;path=[],&nbsp;car_type='Static')&nbsp;-&amp;gt;&nbsp;None<br>
 &nbsp;<br>
 <br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="Car-__init__"><strong>__init__</strong></a>(self, car_ID, car_length, start_edge, start_pos_meter, end_edge, end_pos_meter, path, car_type) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;traversing&nbsp;the&nbsp;<a href="#Network">Network</a>&nbsp;(<a href="#Car">Car</a>).</tt></dd></dl>
+<dl><dt><a name="Car-__init__"><strong>__init__</strong></a>(self, car_ID, car_length, start_edge, start_pos_meter, end_edge, end_pos_meter, path=[], car_type='Static') -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;an&nbsp;<a href="builtins.html#object">object</a>&nbsp;traversing&nbsp;the&nbsp;<a href="#Network">Network</a>&nbsp;(<a href="#Car">Car</a>).<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&nbsp;Unique&nbsp;ID&nbsp;associated&nbsp;with&nbsp;this&nbsp;<a href="#Car">Car</a>&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;car_length:&nbsp;&nbsp;Physical&nbsp;unit&nbsp;length&nbsp;of&nbsp;the&nbsp;<a href="#Car">Car</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;(ex:&nbsp;meters).&nbsp;&nbsp;May&nbsp;be&nbsp;0.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;start_edge:&nbsp;&nbsp;<a href="#Edge">Edge</a>&nbsp;from&nbsp;which&nbsp;this&nbsp;<a href="#Car">Car</a>&nbsp;originates&nbsp;its&nbsp;journey.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;start_pos_meter:&nbsp;&nbsp;Unit&nbsp;position&nbsp;along&nbsp;start_edge&nbsp;from&nbsp;which&nbsp;the&nbsp;<a href="#Car">Car</a>&nbsp;begins&nbsp;its&nbsp;journey.&nbsp;&nbsp;<a href="#Edge">Edge</a>&nbsp;origin&nbsp;=&nbsp;position&nbsp;0.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end_edge:&nbsp;&nbsp;<a href="#Edge">Edge</a>&nbsp;from&nbsp;which&nbsp;this&nbsp;<a href="#Car">Car</a>&nbsp;terminates&nbsp;its&nbsp;journey.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end_pos_meter:&nbsp;&nbsp;Unit&nbsp;position&nbsp;along&nbsp;end_edge&nbsp;at&nbsp;which&nbsp;the&nbsp;<a href="#Car">Car</a>&nbsp;terminates&nbsp;its&nbsp;journey&nbsp;and&nbsp;leaves&nbsp;the&nbsp;<a href="#Network">Network</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;path:&nbsp;&nbsp;Ordered&nbsp;list&nbsp;of&nbsp;Edges&nbsp;that&nbsp;the&nbsp;<a href="#Car">Car</a>&nbsp;will&nbsp;traverse&nbsp;to&nbsp;get&nbsp;from&nbsp;start&nbsp;to&nbsp;end.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;car_type:&nbsp;&nbsp;<a href="#Car">Car</a>&nbsp;classification&nbsp;for&nbsp;path-following:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;'static':&nbsp;&nbsp;<a href="#Car">Car</a>&nbsp;follows&nbsp;predetermined&nbsp;path.&nbsp;&nbsp;If&nbsp;no&nbsp;path&nbsp;assigned,&nbsp;a&nbsp;path&nbsp;is&nbsp;generated&nbsp;when&nbsp;the&nbsp;<a href="#Car">Car</a>&nbsp;is&nbsp;added&nbsp;to&nbsp;the&nbsp;simulation.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;'dynamic':&nbsp;&nbsp;<a href="#Car">Car</a>&nbsp;will&nbsp;recalculate&nbsp;its&nbsp;route&nbsp;every&nbsp;time&nbsp;it&nbsp;reaches&nbsp;a&nbsp;<a href="#Node">Node</a>.&nbsp;&nbsp;(Will&nbsp;be&nbsp;implemented&nbsp;in&nbsp;future&nbsp;versions&nbsp;of&nbsp;the&nbsp;software).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;mobile:&nbsp;&nbsp;<a href="#Car">Car</a>&nbsp;classification&nbsp;for&nbsp;mobility:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;True:&nbsp;&nbsp;<a href="#Car">Car</a>&nbsp;is&nbsp;eligible&nbsp;to&nbsp;move&nbsp;(default).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;False:&nbsp;&nbsp;<a href="#Car">Car</a>&nbsp;has&nbsp;been&nbsp;halted&nbsp;and&nbsp;will&nbsp;not&nbsp;move&nbsp;until&nbsp;further&nbsp;instructions&nbsp;given.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;route_status:&nbsp;&nbsp;string&nbsp;explaining&nbsp;the&nbsp;<a href="#Car">Car</a>'s&nbsp;status&nbsp;with&nbsp;regards&nbsp;to&nbsp;path&nbsp;completion:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'In&nbsp;progress':&nbsp;&nbsp;The&nbsp;<a href="#Car">Car</a>&nbsp;is&nbsp;eligible&nbsp;for&nbsp;movement;&nbsp;the&nbsp;<a href="#Car">Car</a>&nbsp;is&nbsp;moving&nbsp;along&nbsp;its&nbsp;path.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'Route&nbsp;Completed':&nbsp;&nbsp;The&nbsp;<a href="#Car">Car</a>&nbsp;has&nbsp;reached&nbsp;its&nbsp;destination&nbsp;and&nbsp;has&nbsp;been&nbsp;removed&nbsp;from&nbsp;the&nbsp;<a href="#Network">Network</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'Paused':&nbsp;&nbsp;The&nbsp;<a href="#Car">Car</a>&nbsp;is&nbsp;ineligible&nbsp;for&nbsp;movement&nbsp;due&nbsp;to&nbsp;mobile=False.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'Removed&nbsp;from&nbsp;simulation&nbsp;at&nbsp;tick&nbsp;#n':&nbsp;&nbsp;The&nbsp;<a href="#Car">Car</a>&nbsp;was&nbsp;removed&nbsp;from&nbsp;the&nbsp;simulation&nbsp;by&nbsp;external&nbsp;intervention.&nbsp;&nbsp;n&nbsp;denotes&nbsp;timestamp&nbsp;at&nbsp;which&nbsp;it&nbsp;was&nbsp;removed.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;current_edge:&nbsp;&nbsp;<a href="#Edge">Edge</a>&nbsp;ID&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;<a href="#Car">Car</a>'s&nbsp;current&nbsp;location.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;current_pos_meter_car_front:&nbsp;&nbsp;Unit&nbsp;distance&nbsp;along&nbsp;current_edge&nbsp;corresponding&nbsp;to&nbsp;the&nbsp;<a href="#Car">Car</a>'s&nbsp;current&nbsp;location.&nbsp;&nbsp;If&nbsp;car_length&nbsp;&gt;&nbsp;0,&nbsp;this&nbsp;refers&nbsp;to&nbsp;the&nbsp;position&nbsp;of&nbsp;the&nbsp;front&nbsp;of&nbsp;the&nbsp;<a href="#Car">Car</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_tick_potential:&nbsp;&nbsp;Proportion&nbsp;of&nbsp;global&nbsp;maximum&nbsp;tick&nbsp;time-distance&nbsp;that&nbsp;the&nbsp;<a href="#Car">Car</a>&nbsp;is&nbsp;eligible&nbsp;to&nbsp;move&nbsp;(default&nbsp;=&nbsp;1,&nbsp;full&nbsp;potential).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;current_tick_potential:&nbsp;&nbsp;Portion&nbsp;of&nbsp;tick&nbsp;time-distance&nbsp;that&nbsp;the&nbsp;car&nbsp;has&nbsp;not&nbsp;utilized&nbsp;on&nbsp;this&nbsp;tick.</tt></dd></dl>
 
 <dl><dt><a name="Car-get_car_ID"><strong>get_car_ID</strong></a>(self)</dt></dl>
 
@@ -102,7 +125,21 @@ Data descriptors defined here:<br>
 <br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="Edge-__init__"><strong>__init__</strong></a>(self, id, start_node_id, end_node_id, edge_length, max_speed=0.028, max_capacity=inf) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;a&nbsp;road&nbsp;segment&nbsp;(<a href="#Edge">Edge</a>).</tt></dd></dl>
+<dl><dt><a name="Edge-__init__"><strong>__init__</strong></a>(self, id, start_node_id, end_node_id, edge_length, max_speed=0.028, max_capacity=inf) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;a&nbsp;road&nbsp;segment&nbsp;(<a href="#Edge">Edge</a>).<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&nbsp;Unique&nbsp;ID&nbsp;associated&nbsp;with&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;start_node_id:&nbsp;&nbsp;<a href="#Node">Node</a>&nbsp;from&nbsp;which&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;originates&nbsp;(this&nbsp;<a href="#Edge">Edge</a>&nbsp;is&nbsp;an&nbsp;outbound_edge&nbsp;for&nbsp;start_node).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end_node_id:&nbsp;&nbsp;<a href="#Node">Node</a>&nbsp;from&nbsp;which&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;terminates&nbsp;(this&nbsp;<a href="#Edge">Edge</a>&nbsp;is&nbsp;an&nbsp;inbound_edge&nbsp;for&nbsp;end_node).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;start_node:&nbsp;&nbsp;<a href="#Node">Node</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;represented&nbsp;by&nbsp;start_node_id.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end_node:&nbsp;&nbsp;<a href="#Node">Node</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;represented&nbsp;by&nbsp;end_node_id.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge_length:&nbsp;&nbsp;Physical&nbsp;length&nbsp;of&nbsp;the&nbsp;<a href="#Edge">Edge</a>&nbsp;(ex:&nbsp;meter&nbsp;length&nbsp;of&nbsp;a&nbsp;road).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_speed:&nbsp;&nbsp;(optional)&nbsp;Unit&nbsp;speed&nbsp;limit&nbsp;of&nbsp;the&nbsp;road.&nbsp;&nbsp;Without&nbsp;obstructions,&nbsp;this&nbsp;is&nbsp;the&nbsp;maximum&nbsp;distance&nbsp;a&nbsp;<a href="#Car">Car</a>&nbsp;can&nbsp;move&nbsp;on&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;in&nbsp;one&nbsp;tick.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_capacity:&nbsp;&nbsp;(optional)&nbsp;Maximum&nbsp;number&nbsp;of&nbsp;<a href="#Car">Car</a>&nbsp;objects&nbsp;allowed&nbsp;on&nbsp;the&nbsp;<a href="#Edge">Edge</a>&nbsp;(max&nbsp;length&nbsp;of&nbsp;current_cars).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge_car_ID_to_car:&nbsp;&nbsp;Dictionary&nbsp;containing&nbsp;all&nbsp;<a href="#Car">Car</a>&nbsp;objects&nbsp;associated&nbsp;with&nbsp;the&nbsp;<a href="#Edge">Edge</a>;&nbsp;maps&nbsp;<a href="#Car">Car</a>&nbsp;IDs&nbsp;to&nbsp;<a href="#Car">Car</a>&nbsp;objects.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;current_cars:&nbsp;&nbsp;List&nbsp;of&nbsp;IDs&nbsp;of&nbsp;all&nbsp;Cars&nbsp;currently&nbsp;on&nbsp;the&nbsp;<a href="#Edge">Edge</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;waiting_cars:&nbsp;&nbsp;List&nbsp;of&nbsp;IDs&nbsp;for&nbsp;Cars&nbsp;that&nbsp;are&nbsp;trying&nbsp;to&nbsp;enter&nbsp;the&nbsp;<a href="#Network">Network</a>&nbsp;at&nbsp;this&nbsp;<a href="#Edge">Edge</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;processed_cars:&nbsp;&nbsp;List&nbsp;capturing&nbsp;IDs&nbsp;of&nbsp;Cars&nbsp;that&nbsp;have&nbsp;already&nbsp;been&nbsp;processed&nbsp;on&nbsp;the&nbsp;current&nbsp;tick.&nbsp;&nbsp;Becomes&nbsp;current_cars&nbsp;at&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;<a href="#Edge">Edge</a>&nbsp;tick.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;completed_cars:&nbsp;&nbsp;List&nbsp;of&nbsp;IDs&nbsp;of&nbsp;any&nbsp;Cars&nbsp;that&nbsp;have&nbsp;completed&nbsp;their&nbsp;route&nbsp;on&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;in&nbsp;the&nbsp;duration&nbsp;of&nbsp;the&nbsp;simulation.</tt></dd></dl>
 
 <dl><dt><a name="Edge-add_car_to_wait_queue"><strong>add_car_to_wait_queue</strong></a>(self, car)</dt><dd><tt>Adds&nbsp;<a href="#Car">Car</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;to&nbsp;the&nbsp;waiting&nbsp;queue&nbsp;and&nbsp;links&nbsp;<a href="#Car">Car</a>&nbsp;to&nbsp;<a href="#Edge">Edge</a>&nbsp;on&nbsp;<a href="#Car">Car</a>&nbsp;ID.</tt></dd></dl>
 
@@ -155,7 +192,11 @@ Data descriptors defined here:<br>
 <br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="Network-__init__"><strong>__init__</strong></a>(self, config) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;the&nbsp;(road)&nbsp;network&nbsp;as&nbsp;a&nbsp;whole.</tt></dd></dl>
+<dl><dt><a name="Network-__init__"><strong>__init__</strong></a>(self, config) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;the&nbsp;(road)&nbsp;network&nbsp;as&nbsp;a&nbsp;whole.<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;node_ID_to_node:&nbsp;&nbsp;Dictionary&nbsp;mapping&nbsp;<a href="#Node">Node</a>&nbsp;IDs&nbsp;to&nbsp;<a href="#Node">Node</a>&nbsp;objects.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge_ID_to_edge:&nbsp;&nbsp;Dictionary&nbsp;mapping&nbsp;<a href="#Edge">Edge</a>&nbsp;IDs&nbsp;to&nbsp;<a href="#Edge">Edge</a>&nbsp;objects.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;car_ID_to_car:&nbsp;&nbsp;Dictionary&nbsp;mapping&nbsp;<a href="#Car">Car</a>&nbsp;IDs&nbsp;to&nbsp;<a href="#Car">Car</a>&nbsp;objects.</tt></dd></dl>
 
 <dl><dt><a name="Network-add_car"><strong>add_car</strong></a>(self, car)</dt><dd><tt>Places&nbsp;car&nbsp;(<a href="builtins.html#object">object</a>)&nbsp;on&nbsp;the&nbsp;waiting&nbsp;queue&nbsp;for&nbsp;its&nbsp;specified&nbsp;start_edge.</tt></dd></dl>
 
@@ -202,7 +243,12 @@ Data descriptors defined here:<br>
 <br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="Node-__init__"><strong>__init__</strong></a>(self, id) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;a&nbsp;network&nbsp;intersection&nbsp;(<a href="#Node">Node</a>).</tt></dd></dl>
+<dl><dt><a name="Node-__init__"><strong>__init__</strong></a>(self, id) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;functions&nbsp;and&nbsp;attributes&nbsp;pertaining&nbsp;to&nbsp;a&nbsp;network&nbsp;intersection&nbsp;(<a href="#Node">Node</a>).<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&nbsp;Unique&nbsp;ID&nbsp;associated&nbsp;with&nbsp;this&nbsp;<a href="#Node">Node</a>&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;inbound_edge_ID_to_edge:&nbsp;&nbsp;Dictionary&nbsp;mapping&nbsp;inbound&nbsp;<a href="#Edge">Edge</a>&nbsp;IDs&nbsp;to&nbsp;<a href="#Edge">Edge</a>&nbsp;objects.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;outbound_edge_ID_to_edge:&nbsp;&nbsp;Dictionary&nbsp;mapping&nbsp;outbound&nbsp;<a href="#Edge">Edge</a>&nbsp;IDs&nbsp;to&nbsp;<a href="#Edge">Edge</a>&nbsp;objects.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;intersection_time_cost:&nbsp;&nbsp;Value&nbsp;representing&nbsp;time-distance&nbsp;required&nbsp;to&nbsp;cross&nbsp;intersection.</tt></dd></dl>
 
 <dl><dt><a name="Node-add_to_inbound"><strong>add_to_inbound</strong></a>(self, edge)</dt></dl>
 
@@ -247,8 +293,8 @@ Data descriptors defined here:<br>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="TrafficManager-__init__"><strong>__init__</strong></a>(self, network_config) -&gt; None</dt><dd><tt>Establishes&nbsp;an&nbsp;instance&nbsp;of&nbsp;<a href="#TrafficManager">TrafficManager</a>&nbsp;to&nbsp;run&nbsp;on&nbsp;the&nbsp;given&nbsp;network&nbsp;structure.<br>
 Attributes:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;self.<strong>graph</strong>:&nbsp;&nbsp;<a href="#Network">Network</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;that&nbsp;the&nbsp;<a href="#TrafficManager">TrafficManager</a>&nbsp;runs&nbsp;on<br>
-&nbsp;&nbsp;&nbsp;&nbsp;self.<strong>timestamp</strong>:&nbsp;&nbsp;Simulation&nbsp;timestamp</tt></dd></dl>
+&nbsp;&nbsp;&nbsp;&nbsp;graph:&nbsp;&nbsp;<a href="#Network">Network</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;that&nbsp;the&nbsp;<a href="#TrafficManager">TrafficManager</a>&nbsp;runs&nbsp;on.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;timestamp:&nbsp;&nbsp;Simulation&nbsp;timestamp.</tt></dd></dl>
 
 <dl><dt><a name="TrafficManager-add_car"><strong>add_car</strong></a>(self, car)</dt><dd><tt>API&nbsp;function:&nbsp;&nbsp;place&nbsp;car&nbsp;(dictionary&nbsp;<a href="builtins.html#object">object</a>)&nbsp;onto&nbsp;the&nbsp;network's&nbsp;waiting&nbsp;queue.</tt></dd></dl>
 
