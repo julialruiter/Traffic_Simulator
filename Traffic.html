@@ -222,7 +222,7 @@ Will&nbsp;be&nbsp;created&nbsp;in&nbsp;future&nbsp;versions.</tt></dd></dl>
 <dl><dt><a name="Node-get_snapshot"><strong>get_snapshot</strong></a>(self)</dt><dd><tt>Outputs&nbsp;dictionary&nbsp;of&nbsp;<a href="#Node">Node</a>&nbsp;attributes.<br>
 Current&nbsp;version&nbsp;only&nbsp;returns&nbsp;ID;&nbsp;future&nbsp;versions&nbsp;will&nbsp;include&nbsp;stoplight&nbsp;information.</tt></dd></dl>
 
-<dl><dt><a name="Node-tick"><strong>tick</strong></a>(self)</dt><dd><tt>Facillitates&nbsp;<a href="#Edge">Edge</a>&nbsp;ticks&nbsp;and&nbsp;movement&nbsp;of&nbsp;<a href="#Car">Car</a>&nbsp;objects&nbsp;from&nbsp;one&nbsp;<a href="#Edge">Edge</a>&nbsp;to&nbsp;another.<br>
+<dl><dt><a name="Node-tick"><strong>tick</strong></a>(self)</dt><dd><tt>Facilitates&nbsp;<a href="#Edge">Edge</a>&nbsp;ticks&nbsp;and&nbsp;movement&nbsp;of&nbsp;<a href="#Car">Car</a>&nbsp;objects&nbsp;from&nbsp;one&nbsp;<a href="#Edge">Edge</a>&nbsp;to&nbsp;another.<br>
 Each&nbsp;<a href="#Node">Node</a>&nbsp;tick</tt></dd></dl>
 
 <hr>
@@ -245,7 +245,10 @@ Data descriptors defined here:<br>
 <br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="TrafficManager-__init__"><strong>__init__</strong></a>(self, network_config) -&gt; None</dt><dd><tt>Establishes&nbsp;an&nbsp;instance&nbsp;of&nbsp;<a href="#TrafficManager">TrafficManager</a>&nbsp;to&nbsp;run&nbsp;on&nbsp;the&nbsp;given&nbsp;network&nbsp;structure.</tt></dd></dl>
+<dl><dt><a name="TrafficManager-__init__"><strong>__init__</strong></a>(self, network_config) -&gt; None</dt><dd><tt>Establishes&nbsp;an&nbsp;instance&nbsp;of&nbsp;<a href="#TrafficManager">TrafficManager</a>&nbsp;to&nbsp;run&nbsp;on&nbsp;the&nbsp;given&nbsp;network&nbsp;structure.<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.<strong>graph</strong>:&nbsp;&nbsp;<a href="#Network">Network</a>&nbsp;<a href="builtins.html#object">object</a>&nbsp;that&nbsp;the&nbsp;<a href="#TrafficManager">TrafficManager</a>&nbsp;runs&nbsp;on<br>
+&nbsp;&nbsp;&nbsp;&nbsp;self.<strong>timestamp</strong>:&nbsp;&nbsp;Simulation&nbsp;timestamp</tt></dd></dl>
 
 <dl><dt><a name="TrafficManager-add_car"><strong>add_car</strong></a>(self, car)</dt><dd><tt>API&nbsp;function:&nbsp;&nbsp;place&nbsp;car&nbsp;(dictionary&nbsp;<a href="builtins.html#object">object</a>)&nbsp;onto&nbsp;the&nbsp;network's&nbsp;waiting&nbsp;queue.</tt></dd></dl>
 

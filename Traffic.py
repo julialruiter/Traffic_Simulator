@@ -6,6 +6,9 @@ import random
 class TrafficManager:
     def __init__(self, network_config) -> None:
         '''Establishes an instance of TrafficManager to run on the given network structure.
+        Attributes:
+            graph:  Network object that the TrafficManager runs on.
+            timestamp:  Simulation timestamp.
         '''
         self.graph = Network(network_config)
         self.timestamp = 0
@@ -16,7 +19,6 @@ class TrafficManager:
         '''
         self.timestamp += 1  
         steps_count = 0
-        total_potential_used_on_tick = 0
 
         expended_energy = 0                       # work actually done
         sum_maximum_expendible_energy = 0         # maximum work possible
@@ -128,11 +130,15 @@ class TrafficManager:
 class Network:
     def __init__(self, config) -> None:
         '''Contains all functions and attributes pertaining to the (road) network as a whole.
+        Attributes:
+            node_ID_to_node:  Dictionary mapping Node IDs to Node objects.
+            edge_ID_to_edge:  Dictionary mapping Edge IDs to Edge objects.
+            car_ID_to_car:  Dictionary mapping Car IDs to Car objects.
+
         '''
         self.node_ID_to_node = collections.defaultdict(lambda: None)
         self.edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.car_ID_to_car = collections.defaultdict(lambda: None)
-        self.potential = None
 
         for node in config["node_list"]:
             self.add_node(node)
@@ -312,11 +318,16 @@ class Network:
 class Node:
     def __init__(self, id) -> None:
         '''Contains all functions and attributes pertaining to a network intersection (Node).
+        Attributes:
+            id:  Unique ID associated with this Node object.
+            inbound_edge_ID_to_edge:  Dictionary mapping inbound Edge IDs to Edge objects.
+            outbound_edge_ID_to_edge:  Dictionary mapping outbound Edge IDs to Edge objects.
+            intersection_time_cost:  Value representing time-distance required to cross intersection.
         '''
         self.id = id
         self.inbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
-        self.neighbours = collections.defaultdict(lambda: None)  # TODO: calculate later
+        # self.neighbours = collections.defaultdict(lambda: None)  # TODO: calculate later
         self.intersection_time_cost = 0    # weight representing time (ex: time it takes to transverse intersection)
 
     def add_to_inbound(self, edge):
@@ -421,7 +432,21 @@ class Edge:
                  max_capacity = inf           # inf implies no metering/no artificial limit on number of cars allowed on road segment
                  ) -> None:                   # NOTE:  adjust if more fields required
         '''Contains all functions and attributes pertaining to a road segment (Edge).
-        '''
+        Attributes:
+            id:  Unique ID associated with this Edge object.
+            start_node_id:  Node from which this Edge originates (this Edge is an outbound_edge for start_node).
+            end_node_id:  Node from which this Edge terminates (this Edge is an inbound_edge for end_node).
+            start_node:  Node object represented by start_node_id.
+            end_node:  Node object represented by end_node_id.
+            edge_length:  Physical length of the Edge (ex: meter length of a road).
+            max_speed:  (optional) Unit speed limit of the road.  Without obstructions, this is the maximum distance a Car can move on this Edge in one tick.
+            max_capacity:  (optional) Maximum number of Car objects allowed on the Edge (max length of current_cars).
+            edge_car_ID_to_car:  Dictionary containing all Car objects associated with the Edge; maps Car IDs to Car objects.
+            current_cars:  List of IDs of all Cars currently on the Edge.
+            waiting_cars:  List of IDs for Cars that are trying to enter the Network at this Edge.
+            processed_cars:  List capturing IDs of Cars that have already been processed on the current tick.  Becomes current_cars at the end of the Edge tick.
+            completed_cars:  List of IDs of any Cars that have completed their route on this Edge in the duration of the simulation.
+            '''
         self.id = id
 
         self.start_node_id = start_node_id
@@ -604,10 +629,33 @@ class Car:
                  start_pos_meter,
                  end_edge,
                  end_pos_meter,
-                 path,
-                 car_type) -> None:
+                 path = [],
+                 car_type = 'Static') -> None:
         '''Contains all functions and attributes pertaining to an object traversing the Network (Car).
-        '''
+        Attributes:
+            id:  Unique ID associated with this Car object.
+            car_length:  Physical unit length of the Car object (ex: meters).  May be 0.
+            start_edge:  Edge from which this Car originates its journey.
+            start_pos_meter:  Unit position along start_edge from which the Car begins its journey.  Edge origin = position 0.
+            end_edge:  Edge from which this Car terminates its journey.
+            end_pos_meter:  Unit position along end_edge at which the Car terminates its journey and leaves the Network.
+            path:  Ordered list of Edges that the Car will traverse to get from start to end.
+            car_type:  Car classification for path-following:
+                if 'static':  Car follows predetermined path.  If no path assigned, a path is generated when the Car is added to the simulation.
+                if 'dynamic':  Car will recalculate its route every time it reaches a Node.  (Will be implemented in future versions of the software).
+            mobile:  Car classification for mobility:
+                if True:  Car is eligible to move (default).
+                if False:  Car has been halted and will not move until further instructions given.
+            route_status:  string explaining the Car's status with regards to path completion:
+                'In progress':  The Car is eligible for movement; the Car is moving along its path.
+                'Route Completed':  The Car has reached its destination and has been removed from the Network.
+                'Paused':  The Car is ineligible for movement due to mobile=False.
+                'Removed from simulation at tick #n':  The Car was removed from the simulation by external intervention.  n denotes timestamp at which it was removed.
+            current_edge:  Edge ID corresponding to the Car's current location.
+            current_pos_meter_car_front:  Unit distance along current_edge corresponding to the Car's current location.  If car_length > 0, this refers to the position of the front of the Car.
+            max_tick_potential:  Proportion of global maximum tick time-distance that the Car is eligible to move (default = 1, full potential).
+            current_tick_potential:  Portion of tick time-distance that the car has not utilized on this tick.
+            '''
         self.id = car_ID
         self.car_length = car_length
         self.start_edge = start_edge
@@ -622,7 +670,7 @@ class Car:
         self.current_edge = None
         self.current_pos_meter_car_front = None 
         self.max_tick_potential = 1
-        self.current_tick_potential = 1
+        self.current_tick_potential = copy.deepcopy(self.max_tick_potential)    # only for initialization
 
 
     def tick(self, old_potential):
