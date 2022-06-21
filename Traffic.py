@@ -63,26 +63,40 @@ class TrafficManager:
             self.graph.add_car(car)
 
     def remove_car(self, car_id):
-        '''API function:  removes the car associated with 'car_id' from the simulation.
-        This is done by forcing it into the 'Route Completed' state.'''
+        '''API function:  removes the Car associated with 'car_id' from the simulation.
+        This is done by forcing it into Car.status = 'Removed from simulation'.'''
         if not car_id in self.graph.car_ID_to_car:
-            raise Exception("There is no car with this ID.")
+            raise Exception("There is no car associated with this ID.")
 
         car_object = self.graph.car_ID_to_car[car_id]
         car_edge_ID = car_object.get_current_edge()
         car_edge = self.graph.edge_ID_to_edge[car_edge_ID]
 
-        car_object.route_status = 'Route Completed'
+        car_object.route_status = 'Removed from simulation at tick #' + str(self.get_timestamp())
         car_edge.completed_cars.append(car_id)
 
         car_edge.current_cars.remove(car_object)
         car_edge.edge_car_ID_to_car.pop(car_id) 
 
-    def resume_car(self, car_id):
-        pass
 
     def pause_car(self, car_id):
-        pass
+        '''API function:  forefully halts the Car associated with 'car_id' until a 'resume_car' call is received.
+        No cars behind it may pass.'''
+        if not car_id in self.graph.car_ID_to_car:
+            raise Exception("There is no car associated with this ID.")
+
+        car_object = self.graph.car_ID_to_car[car_id]
+        car_object.mobile = False
+        car_object.route_status = 'Paused'        
+
+    def resume_car(self, car_id):
+        '''API function:  allows the Car associated with 'car_id' to resume moving.'''
+        if not car_id in self.graph.car_ID_to_car:
+            raise Exception("There is no car associated with this ID.")
+            
+        car_object = self.graph.car_ID_to_car[car_id]
+        car_object.mobile = True
+        car_object.route_status = 'In progress'
 
 
 class Network:
@@ -322,9 +336,8 @@ class Node:
                     car_index = inbound_edge_current_cars_list.index(car)
                     inbound_edge.current_cars = inbound_edge_current_cars_list[0:car_index] + inbound_edge_current_cars_list[car_index+1::]
                     inbound_edge.edge_car_ID_to_car.pop(car.get_car_ID())
-
                 
-        print("N: ", self.id ,"\tcars trying to leave : ", outbound_candidates)
+        # print("N: ", self.id ,"\tcars trying to leave : ", outbound_candidates)
         return outbound_candidates
 
 
@@ -393,7 +406,14 @@ class Edge:
         prev_car_back = self.edge_length  # max position a car can travel, resets with each car
 
         for current_car in self.current_cars:
-            if current_car.get_current_tick_potential() > 0:  # move only if there is still energy to do so
+            if current_car.mobile == False:
+                # car is halted and cannot move
+                current_car_id = current_car.get_car_ID()
+                current_car_object = self.edge_car_ID_to_car[current_car_id]
+                current_car_object.current_tick_potential = 0
+                self.processed_cars.append(current_car)
+
+            elif current_car.get_current_tick_potential() > 0:  # move only if there is still energy to do so
                 current_car_id = current_car.get_car_ID()
                 current_car_object = self.edge_car_ID_to_car[current_car_id]
 
@@ -523,7 +543,7 @@ class Car:
         self.path = path
         self.car_type = car_type
         self.mobile = True  # default.  Toggle to False IFF API call received
-        self.route_status = 'in progress'
+        self.route_status = 'In progress'
 
         self.current_edge = None
         self.current_pos_meter_car_front = None 

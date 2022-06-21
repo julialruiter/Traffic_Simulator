@@ -10,7 +10,7 @@
             "path": [
                 5002
             ],
-            "car_type": "static"
+            "car_type": "Static"
         },
         {
             "car_ID": 7001,
@@ -22,7 +22,7 @@
             "path": [
                 5002
             ],
-            "car_type": "static"
+            "car_type": "Static"
         }        
     ]
 }
