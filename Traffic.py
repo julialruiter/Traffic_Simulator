@@ -388,37 +388,48 @@ class Edge:
                 if current_car.get_end_edge() == self.id:
                     exit_potition = current_car.get_end_pos_meter()
                     dist_to_exit = exit_potition - current_car_front
+                    
                     if dist_to_exit < min(max_distance_current_tick_potential, prev_car_back - current_car_front):
                         # set positions to destination
                         current_car.current_pos_meter_car_front = exit_potition
                         current_car.current_edge = current_car.get_end_edge()
+
                         # car exits -- append to completed_cars and remove from further processing
                         current_car.route_status = 'Route Completed'
                         completed_car_ID = current_car.get_car_ID()
                         self.completed_cars.append(completed_car_ID)
-                        self.edge_car_ID_to_car.pop(current_car.get_car_ID())  # TODO:  cars printed from 
+                        self.edge_car_ID_to_car.pop(current_car.get_car_ID())  
                         # del current_car  # car no longer exists
-                        break  # move break statement--it's losing other cars on same edge
-                # otherwise move as far as possible
-                distance_to_advance = min(max_distance_current_tick_potential, prev_car_back - current_car_front)      # no buffer distance
-                distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
-                current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
-                current_car.current_pos_meter_car_front += distance_to_advance  # actually move
-                expended_energy += current_car.tick()   # get potential differential
+                    else:
+                        # otherwise move as far as possible (exit further than travel distance)
+                        distance_to_advance = min(max_distance_current_tick_potential, prev_car_back - current_car_front)      # no buffer distance
+                        distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
+                        current_car_object.current_tick_potential -= distance_to_advance_ticks  
+                        current_car.current_pos_meter_car_front += distance_to_advance  # actually move
+                        expended_energy += current_car.tick()   # get potential differential
+                        prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
 
-                prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
+                        self.processed_cars.append(current_car)
+                else:
+                    # otherwise move as far as possible
+                    distance_to_advance = min(max_distance_current_tick_potential, prev_car_back - current_car_front)      # no buffer distance
+                    distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
+                    current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
+                    current_car.current_pos_meter_car_front += distance_to_advance  # actually move
+                    expended_energy += current_car.tick()   # get potential differential
+                    prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
 
-                self.processed_cars.append(current_car)
+                    self.processed_cars.append(current_car)
 
             else:
-                # car has moved max possible along tick, append to "processed"
+                # car has already moved max possible along tick, append to "processed"
                 self.processed_cars.append(current_car)
 
+        # edge done processing, set up for next tick
         self.current_cars = self.processed_cars
         self.processed_cars = []
-
-        # print(self.id, self.current_cars)
         return expended_energy
+
 
     def get_snapshot(self):
         raw = copy.deepcopy(self.__dict__)
