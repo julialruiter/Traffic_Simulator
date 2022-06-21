@@ -335,7 +335,7 @@ class Node:
 
 
     def tick(self):
-        '''Facillitates Edge ticks and movement of Car objects from one Edge to another.
+        '''Facilitates Edge ticks and movement of Car objects from one Edge to another.
         Each Node tick '''
         print("Current Node Tick: ", self.id)
         expended_energy = 0                       # work actually done
