@@ -1,4 +1,4 @@
-from Traffic import TrafficManager
+from TrafficManager import TrafficManager
 import json
 
 if __name__ == "__main__":
