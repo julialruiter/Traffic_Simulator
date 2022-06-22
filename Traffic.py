@@ -313,7 +313,8 @@ class Network:
         '''
         for car_ID in list(self.car_ID_to_car.keys()):
             car_object = self.car_ID_to_car[car_ID]
-            car_object.current_tick_potential = car_object.get_max_tick_potential() 
+            new_tick_potential = car_object.get_max_tick_potential() 
+            car_object.set_current_tick_potential(new_tick_potential)
 
 class Node:
     def __init__(self, id) -> None:
@@ -356,7 +357,7 @@ class Node:
         # look for inbound_exit_candidates
         candidate_list_dictionary = self.get_inbound_exit_candidates()
         candidate_cars_list = list(candidate_list_dictionary.values())
-        candidate_cars_list.sort(key=lambda x:x.current_tick_potential, reverse=True)  # cars with the highest potential left move first
+        candidate_cars_list.sort(key=lambda x:x.get_current_tick_potential(), reverse=True)  # cars with the highest potential left move first
         for car in candidate_cars_list:
             remaining_potential = car.get_current_tick_potential()
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
@@ -375,7 +376,7 @@ class Node:
                 car.set_current_pos_meter_car_front(0) 
                 new_potential = remaining_potential - intersection_crossing_cost  
                 car.set_current_tick_potential(new_potential)
-                car.path.pop(0)                                           # remove current edge from upcoming path
+                car.get_path().pop(0)      # remove current edge from upcoming path
             else:
                 # place car back on original edge
                 current_edge = car.get_current_edge()
@@ -402,7 +403,8 @@ class Node:
                 if current_front_pos == inbound_edge.get_length():
                     outbound_candidates[inbound_edge_ID] = car
                     car_index = inbound_edge_current_cars_list.index(car)
-                    inbound_edge.current_cars = inbound_edge_current_cars_list[0:car_index] + inbound_edge_current_cars_list[car_index+1::]
+                    new_current_cars_list = inbound_edge_current_cars_list[0:car_index] + inbound_edge_current_cars_list[car_index+1::]
+                    inbound_edge.set_current_cars(new_current_cars_list)
                     inbound_edge.edge_car_ID_to_car.pop(car.get_car_ID())
                 
         # print("N: ", self.id ,"\tcars trying to leave : ", outbound_candidates)
@@ -483,19 +485,19 @@ class Edge:
         sum_maximum_expendible_energy = 0         # maximum work possible
 
         # Sort Current Cars on starting position, ascending
-        self.current_cars.sort(key=lambda x:x.current_pos_meter_car_front, reverse=True)
+        self.current_cars.sort(key=lambda x:x.get_current_pos_meter_car_front(), reverse=True)
 
         # Process any waiting cars
         for waiting_car in self.waiting_cars:
-            car_pos_front = waiting_car.start_pos_meter       
+            car_pos_front = waiting_car.get_start_pos_meter() 
             entry_edge_ID = self.id   
             waiting_car.set_current_edge(entry_edge_ID)
-            waiting_car.current_pos_meter_car_front = car_pos_front
+            waiting_car.set_current_pos_meter_car_front(car_pos_front)
             self.processed_cars.append(waiting_car)
             expended_energy += waiting_car.get_max_tick_potential()
             sum_maximum_expendible_energy += waiting_car.get_max_tick_potential()
-            waiting_car.current_tick_potential = 0   # all energy used setting
-        self.waiting_cars = []  # remove this later
+            waiting_car.set_current_tick_potential(0)     # all energy used entering network
+        self.waiting_cars = []                     
 
         # Process current cars on edge
         prev_car_back = self.edge_length  # max position a car can travel, resets with each car
@@ -528,7 +530,7 @@ class Edge:
                         current_car.set_current_edge(destination_edge_ID)
 
                         # car exits -- append to completed_cars and remove from further processing
-                        current_car.route_status = 'Route Completed'
+                        current_car.set_route_status('Route Completed')
                         current_car.set_mobility(False)
                         completed_car_ID = current_car.get_car_ID()
                         self.completed_cars.append(completed_car_ID)
@@ -615,6 +617,8 @@ class Edge:
 
     def get_current_cars(self):
         return self.current_cars
+    def set_current_cars(self, new_list):
+        self.current_cars = new_list
 
     def add_car_to_wait_queue(self, car):
         '''Adds Car object to the waiting queue and links Car to Edge on Car ID.'''
@@ -709,10 +713,7 @@ class Car:
     def get_path(self):
         return self.path
     def set_path(self, new_path_list):
-        '''Replace Car's upcoming path, for use with car_type = "Dynamic"
-        '''
-        # self.path = new_path_list
-        pass
+        self.path = new_path_list
 
     def get_car_type(self):
         return self.car_type
