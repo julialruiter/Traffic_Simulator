@@ -113,7 +113,7 @@ class TrafficManager:
             raise Exception("There is no car associated with this ID.")
 
         car_object = self.graph.car_ID_to_car[car_id]
-        car_object.mobile = False
+        car_object.set_mobility(False)
         car_object.route_status = 'Paused'        
 
     def resume_car(self, car_id):
@@ -123,7 +123,7 @@ class TrafficManager:
             raise Exception("There is no car associated with this ID.")
             
         car_object = self.graph.car_ID_to_car[car_id]
-        car_object.mobile = True
+        car_object.set_mobility(True)
         car_object.route_status = 'In progress'
 
 
@@ -355,7 +355,8 @@ class Node:
 
         # look for inbound_exit_candidates
         candidate_list_dictionary = self.get_inbound_exit_candidates()
-        candidate_cars_list = candidate_list_dictionary.values()
+        candidate_cars_list = list(candidate_list_dictionary.values())
+        candidate_cars_list.sort(key=lambda x:x.current_tick_potential, reverse=True)  # cars with the highest potential left move first
         for car in candidate_cars_list:
             remaining_potential = car.get_current_tick_potential()
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
@@ -370,9 +371,10 @@ class Node:
 
                 # move to position 0 at new edge
                 next_edge_object.move_existing_car_to_edge(car)           
-                car.current_edge = next_edge_ID                           
-                car.current_pos_meter_car_front = 0                       
-                car.current_tick_potential -= intersection_crossing_cost 
+                car.set_current_edge(next_edge_ID)                        
+                car.set_current_pos_meter_car_front(0) 
+                new_potential = remaining_potential - intersection_crossing_cost  
+                car.set_current_tick_potential(new_potential)
                 car.path.pop(0)                                           # remove current edge from upcoming path
             else:
                 # place car back on original edge
@@ -485,8 +487,9 @@ class Edge:
 
         # Process any waiting cars
         for waiting_car in self.waiting_cars:
-            car_pos_front = waiting_car.start_pos_meter           
-            waiting_car.current_edge = self.id
+            car_pos_front = waiting_car.start_pos_meter       
+            entry_edge_ID = self.id   
+            waiting_car.set_current_edge(entry_edge_ID)
             waiting_car.current_pos_meter_car_front = car_pos_front
             self.processed_cars.append(waiting_car)
             expended_energy += waiting_car.get_max_tick_potential()
@@ -503,28 +506,30 @@ class Edge:
             old_potential = current_car_object.get_current_tick_potential()
             sum_maximum_expendible_energy += old_potential
 
-            if current_car.mobile == False:
+            if current_car.get_mobility() == False:
                 # car is halted and cannot move
-                current_car_object.current_tick_potential = 0
+                current_car_object.set_current_tick_potential(0)
                 self.processed_cars.append(current_car)
 
             elif current_car.get_current_tick_potential() > 0:  # move only if there is still energy to do so
-                current_car_front = current_car_object.current_pos_meter_car_front
+                current_car_front = current_car_object.get_current_pos_meter_car_front()
                 max_distance_full_tick_potential = self.get_max_speed()
                 max_distance_current_tick_potential = current_car.get_current_tick_potential() * max_distance_full_tick_potential
 
                 # check if car on destination edge
                 if current_car.get_end_edge() == self.id:
-                    exit_potition = current_car.get_end_pos_meter()
-                    dist_to_exit = exit_potition - current_car_front
+                    exit_position = current_car.get_end_pos_meter()
+                    dist_to_exit = exit_position - current_car_front
 
                     if dist_to_exit < min(max_distance_current_tick_potential, prev_car_back - current_car_front):
                         # set positions to destination
-                        current_car.current_pos_meter_car_front = exit_potition
-                        current_car.current_edge = current_car.get_end_edge()
+                        current_car.set_current_pos_meter_car_front(exit_position)
+                        destination_edge_ID = current_car.get_end_edge()
+                        current_car.set_current_edge(destination_edge_ID)
 
                         # car exits -- append to completed_cars and remove from further processing
                         current_car.route_status = 'Route Completed'
+                        current_car.set_mobility(False)
                         completed_car_ID = current_car.get_car_ID()
                         self.completed_cars.append(completed_car_ID)
                         self.edge_car_ID_to_car.pop(completed_car_ID)  
@@ -664,7 +669,7 @@ class Car:
         self.end_pos_meter = end_pos_meter
         self.path = path
         self.car_type = car_type
-        self.mobile = True          # Default.  Toggle to False IFF API call received
+        self.mobile = True          # Default.  Toggle to False if API call received OR route complete
         self.route_status = 'In progress'   # Default.  There are also 'Paused' and 'Completed' states.
 
         self.current_edge = None
@@ -703,18 +708,39 @@ class Car:
 
     def get_path(self):
         return self.path
+    def set_path(self, new_path_list):
+        '''Replace Car's upcoming path, for use with car_type = "Dynamic"
+        '''
+        # self.path = new_path_list
+        pass
 
     def get_car_type(self):
         return self.car_type
 
+    def get_mobility(self):
+        return self.mobile
+    def set_mobility(self, Boolean):
+        self.mobile = Boolean
+
+    def get_route_status(self):
+        return self.route_status
+    def set_route_status(self, new_string):
+        self.route_status = new_string
+
     def get_current_edge(self):
         return self.current_edge
+    def set_current_edge(self, edge_ID):
+        self.current_edge = edge_ID
     
     def get_current_pos_meter_car_front(self):
         return self.current_pos_meter_car_front
+    def set_current_pos_meter_car_front(self, new_position_meters):
+        self.current_pos_meter_car_front = new_position_meters
 
     def get_max_tick_potential(self):
         return self.max_tick_potential
 
     def get_current_tick_potential(self):
-        return self.current_tick_potential       
+        return self.current_tick_potential     
+    def set_current_tick_potential(self, new_potential):
+        self.current_tick_potential = new_potential
