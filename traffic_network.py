@@ -169,7 +169,10 @@ class Network:
         return self.edge_ID_to_edge[edge_id]
 
     def tick(self):
-        '''Shuffles the order in which Nodes will be processed with each tick to ensure no node is favored.
+        '''Shuffles the order in which Node ticks will be processed with each global tick to ensure no node is favored.
+        Note:  global tick != Node tick.  Global tick is the unit of time until the next state of the simulation, 
+        while Node tick the proportion of that time that its components can move uninterrupted.  
+        Node ticks will occur until the sum of their durations reaches that of a global tick/no further movement is possible.
         '''
         node_keys = list(self.node_ID_to_node.keys())
         expended_energy = 0                       # work actually done
@@ -216,22 +219,21 @@ class Node:
 
     def get_snapshot(self):
         '''Outputs dictionary of Node attributes.
-        Current version only returns ID; future versions will include stoplight information.
         '''
         raw = copy.deepcopy(self.__dict__)
 
         outbound_processing = raw.pop("outbound_edge_ID_to_edge", {})
         raw["outbound_edges"] = list(outbound_processing.keys())
-
         inbound_processing = raw.pop("inbound_edge_ID_to_edge", {})
         raw["inbound_edges"] = list(inbound_processing.keys())
 
-        return raw #{"id": self.id}
+        return raw      #{"id": self.id}
 
 
     def tick(self):
         '''Facilitates Edge ticks and movement of Car objects from one Edge to another.
-        Each Node tick '''
+        Each Node tick shuffles the order in which Edges tick to ensure no particular Edge is favored. 
+        '''
         print("Current Node Tick: ", self.id)
         expended_energy = 0                       # work actually done
         sum_maximum_expendible_energy = 0         # maximum work possible
@@ -241,9 +243,10 @@ class Node:
         candidate_list_dictionary = self.get_inbound_exit_candidates()
         candidate_cars_list = list(candidate_list_dictionary.values())
         candidate_cars_list.sort(key=lambda x:x.get_current_tick_potential(), reverse=True)  # cars with the highest potential left move first
+        
         for car in candidate_cars_list:
-            remaining_potential = car.get_current_tick_potential()
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
+            remaining_potential = car.get_current_tick_potential()
             if remaining_potential >= intersection_crossing_cost:
                 car_path = car.get_path()
                 next_edge_ID = car_path[0]      
@@ -267,14 +270,20 @@ class Node:
                 current_edge_object.move_existing_car_to_edge(car)        # reassociate car and edge with each other
                 
         # advance existing cars on outbound edges as much as possible
-        for outbound_edge_ID in list(self.outbound_edge_ID_to_edge.keys()):
+        outbound_edge_keys = list(self.outbound_edge_ID_to_edge.keys())
+        random.shuffle(outbound_edge_keys)
+        for outbound_edge_ID in outbound_edge_keys:
             outbound_edge = self.outbound_edge_ID_to_edge[outbound_edge_ID]
             edge_tick_outputs = outbound_edge.tick()  # move and place new cars, returning list [expended, max] energy
             expended_energy += edge_tick_outputs[0]
             sum_maximum_expendible_energy += edge_tick_outputs[1]
+
         return expended_energy, sum_maximum_expendible_energy
 
     def get_inbound_exit_candidates(self):
+        '''Checks all inbound edges of a Node.  
+        Any edge that has a Car at the end position of its length is considered a candidate to advance on to the next Edge in its path.
+        '''
         outbound_candidates = collections.defaultdict(lambda: None)
         for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
             inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
@@ -341,7 +350,6 @@ class Edge:
         self.end_node_id = end_node_id
         self.start_node = self.end_node = None 
         self.edge_length = edge_length
-        # self.end_node_ID_to_node = collections.defaultdict(lambda: None)    # for neighbours    
 
         self.max_speed = max_speed
         self.max_capacity = max_capacity
@@ -364,7 +372,11 @@ class Edge:
         self.end_node = node_ptr
 
     def tick(self):
-        '''advance state of network on the edge level'''
+        '''Facilitates the movement of Car objects traversing this Edge.  There are three types of movement:
+            car entry:  a Car from the waiting_car list will be placed on the Edge if and when space becomes available.
+            car exiting:  a Car will exit the Network if and when it reaches its end_pos_meter in the process of its movement IF self.id = Car.end_edge.
+            car movement:  a Car with status mobile = True will advance as far as possible (maximum potential distance, edge end, or until obstructed by another car).
+        '''
         expended_energy = 0                       # work actually done
         sum_maximum_expendible_energy = 0         # maximum work possible
 
@@ -510,7 +522,7 @@ class Edge:
         self.edge_car_ID_to_car[car.get_car_ID()] = car
     def move_existing_car_to_edge(self, car):
         '''Adds Car object to the 'processed-cars' list and links Car to (new) Edge on Car ID.'''
-        self.processed_cars.append(car)     # CURRENT cars:  putting on processed cars artifically increases congestion metric
+        self.processed_cars.append(car)     
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
 

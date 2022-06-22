@@ -30,13 +30,15 @@ class TrafficManager:
             sum_maximum_expendible_energy += network_tick_outputs[1]
             if not network_tick_outputs[0]:
                 # no more movement possible
-                break             
+                break            
 
         print("Steps needed to process tick: ", steps_count)
         self.graph.restore_tick_potential()      # refresh for next tick
 
         if sum_maximum_expendible_energy != 0:
             energy_used_percent = expended_energy / sum_maximum_expendible_energy
+        else:
+            energy_used_percent = None 
         print("Percent of available energy used on tick: ", energy_used_percent)
         return energy_used_percent
               
