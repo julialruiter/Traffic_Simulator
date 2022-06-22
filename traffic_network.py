@@ -219,8 +219,14 @@ class Node:
         Current version only returns ID; future versions will include stoplight information.
         '''
         raw = copy.deepcopy(self.__dict__)
-        return {"id": self.id}
-        #  TODO:  use the deepcopy when implmenting inbound and outbound
+
+        outbound_processing = raw.pop("outbound_edge_ID_to_edge", {})
+        raw["outbound_edges"] = list(outbound_processing.keys())
+
+        inbound_processing = raw.pop("inbound_edge_ID_to_edge", {})
+        raw["inbound_edges"] = list(inbound_processing.keys())
+
+        return raw #{"id": self.id}
 
 
     def tick(self):
