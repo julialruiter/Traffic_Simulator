@@ -195,7 +195,7 @@ class Network:
             new_tick_potential = car_object.get_max_tick_potential() 
             car_object.set_current_tick_potential(new_tick_potential)
             
-            
+
     def get_all_paths_start_edge_to_end_edge(self, start_edge_ID, end_edge_ID) -> None:
         '''Contains a list of all possible non-looping paths from a given start_edge to a given end_edge.
         Costs assume that none of the start_edge nor end_edge is traversed as this cost is constant over all routes.
@@ -238,9 +238,15 @@ class Node:
         self.intersection_time_cost = 0    # weight representing time (ex: time it takes to transverse intersection)
 
     def add_to_inbound(self, edge):
+        '''Used when adding an Edge to the Network when Edge.end_node == self.id .
+        Adds the Edge ID and a mapping to its corresponding Edge object to the inbound_edge_ID_to_edge dictionary.
+        '''
         self.inbound_edge_ID_to_edge[edge.get_edge_ID()] = edge
 
     def add_to_outbound(self, edge):
+        '''Used when adding an Edge to the Network when Edge.start_node == self.id .
+        Adds the Edge ID and a mapping to its corresponding Edge object to the outbound_edge_ID_to_edge dictionary.
+        '''
         self.outbound_edge_ID_to_edge[edge.get_edge_ID()] = edge
 
     def get_snapshot(self):
@@ -310,6 +316,8 @@ class Node:
         '''Checks all inbound edges of a Node.  
         Any edge that has a Car at the end position of its length is considered a candidate to advance on to the next Edge in its path.
         '''
+        # TODO:  recalculate route if car type dynamic"
+
         outbound_candidates = collections.defaultdict(lambda: None)
         for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
             inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
@@ -336,12 +344,21 @@ class Node:
         pass
 
     def get_node_ID(self):
+        '''Returns self.id.
+        Used when calling value from outside the Node class.
+        '''
         return self.id
 
     def get_node_inbound(self):
+        '''Returns the keys to the dictionary self.inbound_edge_ID_to_edge, list of all inbound Edge IDs.
+        Used when calling from outside the Node class.
+        '''
         return self.inbound_edge_ID_to_edge.keys()
 
     def get_node_outbound(self):
+        '''Returns the keys to the dictionary self.outbound_edge_ID_to_edge, list of all outbound Edge IDs.
+        Used when calling from outside the Node class.
+        '''
         return self.outbound_edge_ID_to_edge.keys()
 
 
@@ -389,11 +406,13 @@ class Edge:
 
     def set_start_node(self, node_ptr):
         '''Associates (start) Node pointer with Edge object.
+        Used when adding an Edge to the Network.
         '''
         self.start_node = node_ptr
 
     def set_end_node(self, node_ptr):
         '''Associates (end) Node pointer with Edge object.
+        Used when adding an Edge to the Network.
         '''
         self.end_node = node_ptr
 
@@ -516,38 +535,74 @@ class Edge:
         return raw
 
     def get_edge_ID(self):
+        '''Returns self.id.
+        Used when calling value from outside the Edge class.
+        '''
         return self.id
 
     def get_start_node(self):
+        '''Returns self.start_node Object.
+        Used when calling value from outside the Edge class.
+        '''
         return self.start_node
+
     def get_end_node(self):
+        '''Returns self.end_node Object.
+        Used when calling value from outside the Edge class.
+        '''
         return self.end_node
 
-    def get_start_node_id(self):
+    def get_start_node_id(self):        
+        '''Returns self.start_node_id.
+        Used when calling value from outside the Edge class.
+        '''
         return self.start_node_id
-    def get_end_node_id(self):
+        
+    def get_end_node_id(self):       
+        '''Returns self.end_node_id.
+        Used when calling value from outside the Edge class.
+        '''
         return self.end_node_id
 
-    def get_length(self):
+    def get_length(self):       
+        '''Returns self.edge_length (length of road segment, typically in meters).
+        Used when calling value from outside the Edge class.
+        '''
         return self.edge_length
 
-    def get_max_speed(self):
+    def get_max_speed(self):   
+        '''Returns self.max_speed (speed limit of road segment, typically in meters/sec).
+        Used when calling value from outside the Edge class.
+        '''
         return self.max_speed
 
-    def get_max_capacity(self):
+    def get_max_capacity(self):       
+        '''Returns self.max_capacity.
+        Used when calling value from outside the Edge class.
+        '''
         return self.max_capacity
 
-    def get_current_cars(self):
+    def get_current_cars(self):       
+        '''Returns self.current_cars, the list of Car IDs for all cars currently on the Edge.
+        Used when calling value from outside the Edge class.
+        '''
         return self.current_cars
-    def set_current_cars(self, new_list):
+
+    def set_current_cars(self, new_list):       
+        '''Replaces the list contents of self.current_cars with new_list.
+        Used when updating value from outside the Edge class.
+        '''
         self.current_cars = new_list
 
     def add_car_to_wait_queue(self, car):
-        '''Adds Car object to the waiting queue and links Car to Edge on Car ID.'''
+        '''Adds Car object to the waiting queue and links Car to Edge on Car ID.
+        '''
         self.waiting_cars.append(car)
         self.edge_car_ID_to_car[car.get_car_ID()] = car
+
     def move_existing_car_to_edge(self, car):
-        '''Adds Car object to the 'processed-cars' list and links Car to (new) Edge on Car ID.'''
+        '''Adds Car object to the 'processed-cars' list and links Car to (new) Edge on Car ID.
+        '''
         self.processed_cars.append(car)     
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
@@ -606,7 +661,8 @@ class Car:
 
     def tick(self, old_potential):
         '''Calculates "potential" differential;
-        This is the portion of a full tick movement completed by the Car on this tick.'''
+        This is the portion of a full tick movement completed by the Car on this tick.
+        '''
         return old_potential - self.current_tick_potential
 
     def get_snapshot(self):
@@ -615,56 +671,128 @@ class Car:
         return self.__dict__
 
     def get_car_ID(self):
+        '''Returns self.id.
+        Used when calling value from outside the Car class.
+        '''
         return self.id
     
     def get_car_length(self):
+        '''Returns self.car_length.
+        Used when calling value from outside the Car class.
+        '''
         return self.car_length
     
     def get_start_edge(self):
+        '''Returns self.start_edge, the Edge at which the Car entered the Network.
+        Used when calling value from outside the Car class.
+        '''
         return self.start_edge
     
     def get_start_pos_meter(self):
+        '''Returns self.start_pos_meter, the position on the start Edge at which the Car entered the Network.
+        Used when calling value from outside the Car class.
+        '''
         return self.start_pos_meter
     
-    def get_end_edge(self):
+    def get_end_edge(self):        
+        '''Returns self.end_edge, the Edge at which the Car finishes its route and leaves the Network.
+        Used when calling value from outside the Car class.
+        '''
         return self.end_edge
     
-    def get_end_pos_meter(self):
+    def get_end_pos_meter(self):      
+        '''Returns self.end_pos_meter, the position on the Edge at which the Car finishes its route and leaves the Network.
+        Used when calling value from outside the Car class.
+        '''
         return self.end_pos_meter
 
     def get_path(self):
+        '''Returns self.path, the ordered list of upcoming Edges the Car will traverse.
+        Used when calling value from outside the Car class.
+        '''
         return self.path
+
     def set_path(self, new_path_list):
+        '''Replaces self.path with new_path_list, 
+        typically removing the first entry as the car enters a new Edge, or when calculating a new route.
+        Used when updating value from outside the Car class.
+        '''
         self.path = new_path_list
 
     def get_car_type(self):
+        '''Returns self.car_type.
+        Value is "static" (Car remains on its original path) or "dynamic" (Car recalculates path at every Node crossing).
+        Used when calling value from outside the Car class.
+        '''
         return self.car_type
 
     def get_mobility(self):
+        '''Returns self.mobile.
+        Value is True (Car is eligible to move) or False (Car is halted or its path is complete).
+        Used when calling value from outside the Car class.
+        '''
         return self.mobile
+
     def set_mobility(self, Boolean):
+        '''Updates the Boolean value of self.mobile to input Boolean.
+        Value is True (Car is eligible to move) or False (Car is halted or its path is complete).
+        Used when updating value from outside the Car class.
+        '''
         self.mobile = Boolean
 
     def get_route_status(self):
+        '''Returns self.route_status.
+        Value is "In progress", "Route Completed", "Paused", or "Removed from simulation at tick #n".
+        Used when calling value from outside the Car class.
+        '''
         return self.route_status
+
     def set_route_status(self, new_string):
+        '''Updates self.route_status to new_string.
+        Value should be "In progress", "Route Completed", "Paused", or "Removed from simulation at tick #n".
+        Used when updating value from outside the Car class.
+        '''
         self.route_status = new_string
 
-    def get_current_edge(self):
+    def get_current_edge(self):        
+        '''Returns self.car_length.
+        Used when calling value from outside the Car class.
+        '''
         return self.current_edge
+
     def set_current_edge(self, edge_ID):
+        '''Replaces self.current_edge with edge_ID.
+        Used when updating value from outside the Car class.
+        '''
         self.current_edge = edge_ID
     
-    def get_current_pos_meter_car_front(self):
+    def get_current_pos_meter_car_front(self):        
+        '''Returns self.current_pos_meter_car_front.
+        Used when calling value from outside the Car class.
+        '''
         return self.current_pos_meter_car_front
+
     def set_current_pos_meter_car_front(self, new_position_meters):
+        '''Replaces self.current_pos_meter_car_front with new_position_meters.
+        Used when updating value from outside the Car class.
+        '''
         self.current_pos_meter_car_front = new_position_meters
 
     def get_max_tick_potential(self):
+        '''Returns self.max_tick_potential.
+        Used when calling value from outside the Car class.
+        '''
         return self.max_tick_potential
 
-    def get_current_tick_potential(self):
+    def get_current_tick_potential(self):        
+        '''Returns self.current_tick_potential.
+        Used when calling value from outside the Car class.
+        '''
         return self.current_tick_potential     
+
     def set_current_tick_potential(self, new_potential):
+        '''Replaces self.current_tick_potential with new_potential.
+        Used when updating value from outside the Car class.
+        '''
         self.current_tick_potential = new_potential
 
