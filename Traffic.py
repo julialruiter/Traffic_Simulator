@@ -69,8 +69,10 @@ class TrafficManager:
         '''
         return self.timestamp  
 
+
     def get_node_edges_in_out(self, node_ID):  
         '''API function:  lists the IDs of inbound and outbound edges for a particular node.
+        This information can also be found via 'get_snapshot()'.
         '''
         node = self.graph.get_node_from_id(node_ID)
         inbound_edge_list = list(node.get_node_inbound())
@@ -79,7 +81,7 @@ class TrafficManager:
         node_output["node_id"] = node_ID
         node_output["inbound_edges"] = inbound_edge_list
         node_output["outbound_edges"] = outbound_edge_list
-        # print(node_output)
+
 
     def add_car(self, car):
         '''API function:  place car (dictionary object) onto the network's waiting queue.
