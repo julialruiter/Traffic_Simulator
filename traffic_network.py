@@ -194,6 +194,32 @@ class Network:
             car_object = self.car_ID_to_car[car_ID]
             new_tick_potential = car_object.get_max_tick_potential() 
             car_object.set_current_tick_potential(new_tick_potential)
+            
+            
+    def get_all_paths_start_edge_to_end_edge(self, start_edge_ID, end_edge_ID) -> None:
+        '''Contains a list of all possible non-looping paths from a given start_edge to a given end_edge.
+        Costs assume that none of the start_edge nor end_edge is traversed as this cost is constant over all routes.
+        '''
+        path_list = []
+        path_cost = []
+
+        current_path = []
+        current_path_cost = 0
+        visited_edges = []
+
+        # TODO:  write route calculator
+        end_edge = self.edge_ID_to_edge[end_edge_ID]
+        current_edge_ID = start_edge_ID         # starting condition
+        while current_edge_ID != end_edge_ID:
+            pass
+
+        if start_edge_ID == end_edge_ID:
+            path_list.append(current_path) 
+            path_cost.append(path_cost)
+
+        start_edge = self.edge_ID_to_edge[start_edge_ID]
+
+        # TODO:  calculate routes
 
 
 class Node:
