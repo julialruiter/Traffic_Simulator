@@ -1,4 +1,5 @@
 from Traffic import TrafficManager
+from UnderlyingNetworkGenerator import NetworkGenerator
 import json
 
 if __name__ == "__main__":
@@ -52,7 +53,10 @@ if __name__ == "__main__":
             json.dump(tm.get_snapshot(), f)
 
 
-    print(tm.graph.path_depth_first_search(5000,5001))
+    # print(tm.graph.path_depth_first_search(5000,5001))
+
+    ng = NetworkGenerator()
+    print(ng.generate_basic_complete_bidirectional_network(5))
 
 
     
