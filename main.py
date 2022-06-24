@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # print(tm.graph.path_depth_first_search(5000,5001))
 
     ng = NetworkGenerator()
-    print(ng.generate_basic_complete_bidirectional_network(5))
+    print(ng.generate_complete_bidirectional_network_default_values(5))
 
 
     

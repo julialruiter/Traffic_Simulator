@@ -32,9 +32,13 @@ class NetworkGenerator:
         return snapshot
 
 
-    def generate_basic_complete_bidirectional_network(self, number_nodes):
+    def generate_complete_bidirectional_network_default_values(self, number_nodes, 
+                                                               default_edge_length = 5,
+                                                               default_max_speed = 1,
+                                                               default_max_capacity = 100
+                                                               ):
         '''Generates a complete Network consisting of number_nodes Nodes, each connected to every other Node in both directions.
-        This Network uses default values for many Node and Edge fields:
+        This Network uses default values for many Node and Edge fields, which can be input OR use the values below:
             node.intersection_time_cost = 0
             edge.edge_length = 5
             edge.max_speed = 1
@@ -52,9 +56,9 @@ class NetworkGenerator:
             
         # create Edge objects -- requires Nodes to exist first
         edge_index_counter = 0
-        edge_length = 5
-        max_speed = 1
-        max_capacity = 100
+        edge_length = default_edge_length
+        max_speed = default_max_speed
+        max_capacity = default_max_capacity
 
         for start_node in range(0,number_nodes):
             for end_node in range(0,number_nodes):
@@ -72,11 +76,16 @@ class NetworkGenerator:
         return network_dict
 
 
-    def create_ER_network(self, number_nodes, probability_joining):
+    def create_ER_network_default_values(self, number_nodes, probability_joining = 0.5,
+                                         default_edge_length = 5,
+                                         default_max_speed = 1,
+                                         default_max_capacity = 100
+                                         ):
         '''Creates an Erdos Renyi Network based on the given parameters:
         A each pair of nodes has a probability_joining (0 < p < 1) of being connected in an ER Network.
         As this is a directional Network, each pair will be considered separately per direction.
-        This Network uses default values for many Node and Edge fields:
+        This Network uses default values for many Node and Edge fields, which can be input OR use the values below:
+            probability_joining = 0.5
             node.intersection_time_cost = 0
             edge.edge_length = 5
             edge.max_speed = 1
@@ -94,9 +103,9 @@ class NetworkGenerator:
             
         # create Edge objects -- requires Nodes to exist first
         edge_index_counter = 0
-        edge_length = 5
-        max_speed = 1
-        max_capacity = 100
+        edge_length = default_edge_length
+        max_speed = default_max_speed
+        max_capacity = default_max_capacity
 
         for start_node in range(0,number_nodes):
             for end_node in range(0,number_nodes):
@@ -106,9 +115,10 @@ class NetworkGenerator:
                     # generate random number
                     random_number = random.uniform(0,1)
                     if random_number <= probability_joining:
-                        pass
-
-
+                        edge_ID = edge_index_counter
+                        edge_index_counter += 1
+                        new_inbound_edge = Edge(edge_ID, start_node, end_node, edge_length, max_speed, max_capacity)
+                        complete_network_edge_ID_to_edge[edge_ID] = new_inbound_edge
 
 
 class Node:
@@ -134,11 +144,11 @@ class Edge:
         '''Contains all attributes necessary for creating a road segment (Edge).
         Attributes:
             id:  Unique ID associated with this Edge object.
-            start_node_id:  Node from which this Edge originates (this Edge is an outbound_edge for start_node).
-            end_node_id:  Node from which this Edge terminates (this Edge is an inbound_edge for end_node).
+            start_node_id:  Node from which this Edge originates.
+            end_node_id:  Node from which this Edge terminates.
             edge_length:  Physical length of the Edge (ex: meter length of a road).
             max_speed:  (optional) Unit speed limit of the road.  Without obstructions, this is the maximum distance a Car can move on this Edge in one tick.
-            max_capacity:  (optional) Maximum number of Car objects allowed on the Edge (max length of current_cars).
+            max_capacity:  (optional) Maximum number of Car objects allowed on the Edge.
             '''
         self.id = id
         self.start_node_id = start_node_id
