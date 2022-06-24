@@ -196,30 +196,65 @@ class Network:
             car_object.set_current_tick_potential(new_tick_potential)
             
 
-    def get_all_paths_start_edge_to_end_edge(self, start_edge_ID, end_edge_ID) -> None:
-        '''Contains a list of all possible non-looping paths from a given start_edge to a given end_edge.
-        Costs assume that none of the start_edge nor end_edge is traversed as this cost is constant over all routes.
+    def path_depth_first_search(self, current_edge_ID, end_edge_ID, visited_list = []):
+        '''Given a start and end Edge id, return a list of all valid non-looping paths.
         '''
-        path_list = []
-        path_cost = []
+        visited_list.append(current_edge_ID)
 
-        current_path = []
-        current_path_cost = 0
-        visited_edges = []
+        valid_paths = []
 
-        # TODO:  write route calculator
-        end_edge = self.edge_ID_to_edge[end_edge_ID]
-        current_edge_ID = start_edge_ID         # starting condition
-        while current_edge_ID != end_edge_ID:
-            pass
+        current_edge_object = self.edge_ID_to_edge[current_edge_ID]
+        edge_terminal_node = current_edge_object.get_end_node()  # returns node object
+        neighbouring_edge_IDs_list = edge_terminal_node.get_node_outbound()
 
-        if start_edge_ID == end_edge_ID:
-            path_list.append(current_path) 
-            path_cost.append(path_cost)
+        for edge_ID in neighbouring_edge_IDs_list:
+            current_path = copy.deepcopy(visited_list)
 
-        start_edge = self.edge_ID_to_edge[start_edge_ID]
+            if edge_ID == end_edge_ID:  # destination edge reached
+                valid_paths.append(current_path)
+            elif not edge_ID in visited_list:
+                self.path_depth_first_search(edge_ID, end_edge_ID, current_path)
 
-        # TODO:  calculate routes
+        return valid_paths
+
+
+    def path_cost_distance(self, path_list):
+        '''Given path_list, evaluate the total distance it would take to travel.
+        This function assumes that the entirety of each Edge is traveled
+        '''
+        distance_cost = 0
+
+        for edge_ID in path_list:
+            edge_object = self.edge_ID_to_edge[edge_ID]
+            distance_cost += edge_object.get_length()
+        
+        return distance_cost
+
+     
+    def path_cost_minimum_time(self, path_list):
+        '''Given path_list, evaluate the the minimum time it would take to travel (in ticks).
+        Minimum time is calculated assuming a car is able to travel the maximum speed per edge unencumbered.
+        This function assumes that the entirety of each Edge is traveled and includes any Node-crossing time penalties.
+        Note:  time cost does NOT include Node-crossing time out of the final edge
+        '''
+        time_cost = 0
+        final_edge_ID = path_list[-1]
+
+        for edge_ID in path_list:
+            edge_object = self.edge_ID_to_edge[edge_ID]
+            edge_length = edge_object.get_length()
+            edge_speed = edge_object.get_max_speed()
+            edge_traversal_time_in_ticks = edge_length/edge_speed
+            time_cost += edge_traversal_time_in_ticks
+
+            if edge_ID != final_edge_ID:
+                # calculate node crossing time out
+                terminal_node = edge_object.get_end_node()
+                crossing_cost = terminal_node.get_intersection_time_cost()
+                time_cost += crossing_cost
+
+        return time_cost       
+
 
 
 class Node:
@@ -229,12 +264,11 @@ class Node:
             id:  Unique ID associated with this Node object.
             inbound_edge_ID_to_edge:  Dictionary mapping inbound Edge IDs to Edge objects.
             outbound_edge_ID_to_edge:  Dictionary mapping outbound Edge IDs to Edge objects.
-            intersection_time_cost:  Value representing time-distance required to cross intersection.
+            intersection_time_cost:  Value representing time in ticks required to cross intersection.  0 <= value < 1.
         '''
         self.id = id
         self.inbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
-        # self.neighbours = collections.defaultdict(lambda: None)  # TODO: calculate later
         self.intersection_time_cost = 0    # weight representing time (ex: time it takes to transverse intersection)
 
     def add_to_inbound(self, edge):
@@ -360,6 +394,12 @@ class Node:
         Used when calling from outside the Node class.
         '''
         return self.outbound_edge_ID_to_edge.keys()
+
+    def get_intersection_time_cost(self):
+        '''Returns self.intersection_time_cost, the time penalty it takes to cross a Node.
+        Note:  this value may be 0.
+        '''
+        return self.intersection_time_cost
 
 
 class Edge:

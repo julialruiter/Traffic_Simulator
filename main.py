@@ -52,9 +52,7 @@ if __name__ == "__main__":
             json.dump(tm.get_snapshot(), f)
 
 
-    # tm.get_node_edges_in_out(2)
-
-
+    print(tm.graph.path_depth_first_search(5000,5001))
 
 
     
