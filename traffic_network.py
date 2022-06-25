@@ -224,7 +224,7 @@ class Network:
 
     def path_cost_distance(self, path_list):
         '''Given path_list, evaluate the total distance it would take to travel.
-        This function assumes that the entirety of each Edge is traveled
+        This function assumes that the entirety of each Edge is traveled.
         '''
         distance_cost = 0
 
@@ -239,7 +239,7 @@ class Network:
         '''Given path_list, evaluate the the minimum time it would take to travel (in ticks).
         Minimum time is calculated assuming a car is able to travel the maximum speed per edge unencumbered.
         This function assumes that the entirety of each Edge is traveled and includes any Node-crossing time penalties.
-        Note:  time cost does NOT include Node-crossing time out of the final edge
+        Note:  time cost does NOT include Node-crossing time out of the final edge as the Car is expected to exit the Network before the Edge's end.
         '''
         time_cost = 0
         final_edge_ID = path_list[-1]
