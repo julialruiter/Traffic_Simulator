@@ -2,6 +2,7 @@ import collections
 import copy
 import random
 from cmath import inf
+import json
 
 class Network:
     def __init__(self, config) -> None:
@@ -15,6 +16,13 @@ class Network:
         self.node_ID_to_node = collections.defaultdict(lambda: None)
         self.edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.car_ID_to_car = collections.defaultdict(lambda: None)
+        self.edge_default_config = {}
+
+        try:
+            with open("./configs/DEFAULT_edge_values_config.json") as edge_defaults:   # need fully qualified path, not relative
+                self.edge_default_config = json.load(edge_defaults)
+        except:
+            print("Edge value defaults configuration file is missing.")
 
         for node in config["node_list"]:
             self.add_node(node)
@@ -71,13 +79,36 @@ class Network:
     def add_edge(self, edge):
         '''Imports edge(s) from given edge dictionary.
         If both the start and end nodes are already in the network, then the edge will be added.
+        Any Edge attribute values not given in the edge object (imported) will instead be assigned from the imported defaults file: edge_default_config.
+        Note:  there are no default values for id, start_node_id, nor end_node_id as these are an Edge's unique identifiers.
         '''
+        # check if values exist in config, else assign defaults
+        if "edge_length" in edge:
+            edge_length= edge["edge_length"]
+        else:
+            edge_length = self.edge_default_config["edge_length"]
+
+        if "max_speed" in edge:
+            speed_limit = edge["max_speed"]
+        else:
+            speed_limit = self.edge_default_config["max_speed"]
+
+        if "max_capacity" in edge:
+            max_capacity = edge["max_capacity"]
+        else:
+            max_capacity = self.edge_default_config["max_capacity"]
+            if max_capacity == 'Infinity':
+                max_capacity = inf
+                print(max_capacity)
+
+        # create new Edge object
         new_edge = Edge(edge["edge_ID"],
                         edge["start_node"],
                         edge["end_node"],
-                        edge["edge_length"],
-                        edge["max_speed"],
-                        edge["max_capacity"] )
+                        edge_length,
+                        speed_limit,
+                        max_capacity)
+
         if new_edge.get_start_node_id() in self.node_ID_to_node:
             if new_edge.get_end_node_id() in self.node_ID_to_node:
                 start_node = self.node_ID_to_node[new_edge.get_start_node_id()]
@@ -449,9 +480,9 @@ class Edge:
                  id, 
                  start_node_id, 
                  end_node_id, 
-                 edge_length, 
-                 max_speed = 0.028,           # default value 0.028 m/s, or about 100 km/h
-                 max_capacity = inf           # inf implies no metering/no artificial limit on number of cars allowed on road segment
+                 edge_length,                   # average city block is 80m
+                 max_speed,           # default value 0.028 m/s, or about 100 km/h
+                 max_capacity           # inf implies no metering/no artificial limit on number of cars allowed on road segment
                  ) -> None:                   # NOTE:  adjust if more fields required
         '''Contains all functions and attributes pertaining to a road segment (Edge).
         Attributes:
@@ -468,7 +499,9 @@ class Edge:
             waiting_cars:  List of IDs for Cars that are trying to enter the Network at this Edge.
             processed_cars:  List capturing IDs of Cars that have already been processed on the current tick.  Becomes current_cars at the end of the Edge tick.
             completed_cars:  List of IDs of any Cars that have completed their route on this Edge in the duration of the simulation.
-            '''
+        Note:  some attributes have been given default values in the case that the user did not provide them.
+        Please see "DEFAULT_edge_values_config.json for a list of which fields are have default values availabile and what they are.
+        '''
         self.id = id
 
         self.start_node_id = start_node_id
@@ -511,16 +544,17 @@ class Edge:
         self.current_cars.sort(key=lambda x:x.get_current_pos_meter_car_front(), reverse=True)
 
         # Process any waiting cars
-        for waiting_car in self.waiting_cars:
-            car_pos_front = waiting_car.get_start_pos_meter() 
-            entry_edge_ID = self.id   
-            waiting_car.set_current_edge(entry_edge_ID)
-            waiting_car.set_current_pos_meter_car_front(car_pos_front)
-            self.processed_cars.append(waiting_car)
-            expended_energy += waiting_car.get_max_tick_potential()
-            sum_maximum_expendible_energy += waiting_car.get_max_tick_potential()
-            waiting_car.set_current_tick_potential(0)     # all energy used entering network
-        self.waiting_cars = []                     
+        if len(self.current_cars) < self.max_capacity: 
+            for waiting_car in self.waiting_cars:
+                car_pos_front = waiting_car.get_start_pos_meter() 
+                entry_edge_ID = self.id   
+                waiting_car.set_current_edge(entry_edge_ID)
+                waiting_car.set_current_pos_meter_car_front(car_pos_front)
+                self.processed_cars.append(waiting_car)
+                expended_energy += waiting_car.get_max_tick_potential()
+                sum_maximum_expendible_energy += waiting_car.get_max_tick_potential()
+                waiting_car.set_current_tick_potential(0)     # all energy used entering network
+            self.waiting_cars = []                     
 
         # Process current cars on edge
         prev_car_back = self.edge_length  # max position a car can travel, resets with each car
@@ -685,7 +719,6 @@ class Edge:
     def move_existing_car_to_edge(self, car):
         '''Adds Car object to the 'processed-cars' list and links Car to (new) Edge on Car ID.
         '''
-        print("move existing troubleshooting: ", self.id)
         self.processed_cars.append(car)     
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 

@@ -1,0 +1,5 @@
+{
+    "edge_length": 80,
+    "max_speed": 0.028,
+    "max_capacity": Infinity
+}
