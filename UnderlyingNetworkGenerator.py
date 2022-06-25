@@ -7,7 +7,7 @@ class NetworkGenerator:
         '''Class containing various functions for generation Network objects for the simulation to run on.
         A Network can also be provided via custom JSON file instead.
         '''
-        self.info = "Please see individual generator functions for more info."
+        self.info = "Please see individual generator functions for more information."
 
 
     def output_Network_dictionary(self, node_dict, edge_dict):

@@ -17,13 +17,23 @@ class Network:
         self.edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.car_ID_to_car = collections.defaultdict(lambda: None)
         self.edge_default_config = {}
+        self.node_default_config = {}
 
+        # load edge default config
         try:
             with open("./configs/DEFAULT_edge_values_config.json") as edge_defaults:   # need fully qualified path, not relative
                 self.edge_default_config = json.load(edge_defaults)
         except:
             print("Edge value defaults configuration file is missing.")
 
+        # load node default config
+        try:
+            with open("./configs/DEFAULT_node_values_config.json") as node_defaults:   # need fully qualified path, not relative
+                self.node_default_config = json.load(node_defaults)
+        except:
+            print("Node value defaults configuration file is missing.")    
+
+        # create dictionaries mapping Node and Edge objects to Network
         for node in config["node_list"]:
             self.add_node(node)
         for edge in config["edge_list"]:
@@ -71,10 +81,38 @@ class Network:
     def add_node(self, node):
         '''Imports node(s) from given node dictionary and adds them to the network.
         '''
-        new_node = Node(node["node_ID"], self)  # adds Network reference
+        # check if values exist in config, else assign defaults
+        if "intersection_time_cost" in node:
+            intersection_cost = node["intersection_time_cost"]
+        else:
+            intersection_cost = self.node_default_config["intersection_time_cost"]
+
+        if "stoplight_pattern" in node:
+            stoplight_pattern = node["stoplight_pattern"]
+        else:
+            stoplight_pattern = None
+        
+        if "stoplight_duration" in node:
+            stoplight_duration = node["stoplight_duration"]
+        else:
+            stoplight_duration = self.node_default_config["stoplight_duration"]
+
+        if "stoplight_delay" in node:
+            stoplight_delay = node["stoplight_delay"]
+        else:
+            stoplight_delay = self.node_default_config["stoplight_delay"]
+
+        # create new Node object
+        new_node = Node(self,                    # adds Network reference
+                        node["node_ID"], 
+                        intersection_cost,
+                        stoplight_pattern,
+                        stoplight_duration,
+                        stoplight_delay) 
         if self.node_ID_to_node[new_node.get_node_ID()]:
             raise Exception("There is already a Node with this ID")
         self.node_ID_to_node[new_node.get_node_ID()] = new_node
+
 
     def add_edge(self, edge):
         '''Imports edge(s) from given edge dictionary.
@@ -323,19 +361,39 @@ class Network:
 
 
 class Node:
-    def __init__(self, id, Network_reference) -> None:
+    def __init__(self, 
+                 Network_reference, 
+                 id, 
+                 intersection_cost, 
+                 stoplight_pattern,
+                 stoplight_duration,
+                 stoplight_delay) -> None:
         '''Contains all functions and attributes pertaining to a network intersection (Node).
         Attributes:
             id:  Unique ID associated with this Node object.
             inbound_edge_ID_to_edge:  Dictionary mapping inbound Edge IDs to Edge objects.
             outbound_edge_ID_to_edge:  Dictionary mapping outbound Edge IDs to Edge objects.
             intersection_time_cost:  Value representing time in ticks required to cross intersection.  0 <= value < 1.
+            stoplight_pattern:  Ordered list of sets of simeltaneous Edges eligible for car exiting. Pattern cycles through sets. (Will be implemented in future versions of the software).
+            stoplight_pattern_current_index:  Index representing which set of stoplight_pattern the Node is currently on.  (Will be implemented in future versions of the software).
+            stoplight_duration: Number of ticks that the stoplight_pattern stays on its current Edge set. (Will be implemented in future versions of the software).
+            stoplight_delay: Number of ticks between change of stoplight_pattern Edge sets. (Will be implemented in future versions of the software).
+            node_tick_number:  Used in stoplight changes, increments by one with each global TrafficManager tick. (Reference function will be established in future versions of this software).
         '''
         self.id = id
         self.inbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
-        self.intersection_time_cost = 0    # weight representing time (ex: time it takes to transverse intersection)
-        self.Network_pointer = Network_reference
+        self.intersection_time_cost = intersection_cost    
+
+        self.stoplight_pattern = stoplight_pattern
+        self.stoplight_pattern_current_index = 0
+        self.stoplight_duration = stoplight_duration
+        self.stoplight_delay = stoplight_delay
+        self.node_tick_number = 0
+
+        self.Network_pointer = Network_reference     # allows Node to call on Network's path-finding algorithms
+        
+
 
     def add_to_inbound(self, edge):
         '''Used when adding an Edge to the Network when Edge.end_node == self.id .
@@ -452,11 +510,25 @@ class Node:
         return outbound_candidates
 
 
-    def change_stoplight(self):  
-        '''Toggles which edges allow cars to exit.
-        Will be created in future versions.
+    def update_stoplight_attributes(self):  
+        '''Toggles which Edges allow cars to exit by cycling through sets in stoplight_pattern.
+        Returns the set of which inbound Edge set in stoplight_pattern is currently active, or NULL set (denoting red lights for all edges).
+        Communication to TrafficManager to establish global tick and increment will be solved in future versions.
+        Communication to prevent cars from leaving inbound Edges during the node tick will be established in future versions.
         '''
-        pass
+        self.node_tick_number += 1
+
+        open_time = self.stoplight_duration
+        off_time_between = self.stoplight_delay
+        one_on_off_cycle = open_time + off_time_between
+
+        if self.node_tick_number % one_on_off_cycle in range(open_time + 1, one_on_off_cycle + 1):  # +1 to offset base-0
+            # Node is in delay stage, no inbound Edges are open
+            return []
+        else:
+            cycle_index = self.node_tick_number // one_on_off_cycle
+            return self.stoplight_pattern[cycle_index]
+
 
     def get_node_ID(self):
         '''Returns self.id.

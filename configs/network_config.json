@@ -33,7 +33,8 @@
             "start_node": 2,
             "end_node": 4,
             "edge_ID": 5002,
-            "edge_length": 23
+            "edge_length": 23,
+            "max_speed": 4
         },
         {
             "start_node": 3,
