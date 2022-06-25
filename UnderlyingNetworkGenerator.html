@@ -1,0 +1,143 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module UnderlyingNetworkGenerator</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>UnderlyingNetworkGenerator</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5Cusers%5Cjulia%5Cdocuments%5Cgithub%5Ctraffic_simulator%5Cunderlyingnetworkgenerator.py">c:\users\julia\documents\github\traffic_simulator\underlyingnetworkgenerator.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="collections.html">collections</a><br>
+</td><td width="25%" valign=top><a href="random.html">random</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="UnderlyingNetworkGenerator.html#Edge">Edge</a>
+</font></dt><dt><font face="helvetica, arial"><a href="UnderlyingNetworkGenerator.html#NetworkGenerator">NetworkGenerator</a>
+</font></dt><dt><font face="helvetica, arial"><a href="UnderlyingNetworkGenerator.html#Node">Node</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Edge">class <strong>Edge</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Edge">Edge</a>(id,&nbsp;start_node_id,&nbsp;end_node_id,&nbsp;edge_length,&nbsp;max_speed=0.028,&nbsp;max_capacity=inf)&nbsp;-&amp;gt;&nbsp;None<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Edge-__init__"><strong>__init__</strong></a>(self, id, start_node_id, end_node_id, edge_length, max_speed=0.028, max_capacity=inf) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;attributes&nbsp;necessary&nbsp;for&nbsp;creating&nbsp;a&nbsp;road&nbsp;segment&nbsp;(<a href="#Edge">Edge</a>).<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&nbsp;Unique&nbsp;ID&nbsp;associated&nbsp;with&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;start_node_id:&nbsp;&nbsp;<a href="#Node">Node</a>&nbsp;from&nbsp;which&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;originates.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;end_node_id:&nbsp;&nbsp;<a href="#Node">Node</a>&nbsp;from&nbsp;which&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;terminates.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge_length:&nbsp;&nbsp;Physical&nbsp;length&nbsp;of&nbsp;the&nbsp;<a href="#Edge">Edge</a>&nbsp;(ex:&nbsp;meter&nbsp;length&nbsp;of&nbsp;a&nbsp;road).<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_speed:&nbsp;&nbsp;(optional)&nbsp;Unit&nbsp;speed&nbsp;limit&nbsp;of&nbsp;the&nbsp;road.&nbsp;&nbsp;Without&nbsp;obstructions,&nbsp;this&nbsp;is&nbsp;the&nbsp;maximum&nbsp;distance&nbsp;a&nbsp;Car&nbsp;can&nbsp;move&nbsp;on&nbsp;this&nbsp;<a href="#Edge">Edge</a>&nbsp;in&nbsp;one&nbsp;tick.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;max_capacity:&nbsp;&nbsp;(optional)&nbsp;Maximum&nbsp;number&nbsp;of&nbsp;Car&nbsp;objects&nbsp;allowed&nbsp;on&nbsp;the&nbsp;<a href="#Edge">Edge</a>.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="NetworkGenerator">class <strong>NetworkGenerator</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#NetworkGenerator">NetworkGenerator</a>()&nbsp;-&amp;gt;&nbsp;None<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="NetworkGenerator-__init__"><strong>__init__</strong></a>(self) -&gt; None</dt><dd><tt>Class&nbsp;containing&nbsp;various&nbsp;functions&nbsp;for&nbsp;generation&nbsp;Network&nbsp;objects&nbsp;for&nbsp;the&nbsp;simulation&nbsp;to&nbsp;run&nbsp;on.<br>
+Th&nbsp;Network&nbsp;can&nbsp;also&nbsp;be&nbsp;provided&nbsp;via&nbsp;custom&nbsp;JSON&nbsp;file&nbsp;instead.</tt></dd></dl>
+
+<dl><dt><a name="NetworkGenerator-create_ER_network_default_values"><strong>create_ER_network_default_values</strong></a>(self, number_nodes, probability_joining=0.5, default_edge_length=5, default_max_speed=1, default_max_capacity=100)</dt><dd><tt>Creates&nbsp;an&nbsp;Erdos&nbsp;Renyi&nbsp;Network&nbsp;based&nbsp;on&nbsp;the&nbsp;given&nbsp;parameters:<br>
+A&nbsp;each&nbsp;pair&nbsp;of&nbsp;nodes&nbsp;has&nbsp;a&nbsp;probability_joining&nbsp;(0&nbsp;&lt;&nbsp;p&nbsp;&lt;&nbsp;1)&nbsp;of&nbsp;being&nbsp;connected&nbsp;in&nbsp;an&nbsp;ER&nbsp;Network.<br>
+As&nbsp;this&nbsp;is&nbsp;a&nbsp;directional&nbsp;Network,&nbsp;each&nbsp;pair&nbsp;will&nbsp;be&nbsp;considered&nbsp;separately&nbsp;per&nbsp;direction.<br>
+This&nbsp;Network&nbsp;uses&nbsp;default&nbsp;values&nbsp;for&nbsp;many&nbsp;<a href="#Node">Node</a>&nbsp;and&nbsp;<a href="#Edge">Edge</a>&nbsp;fields,&nbsp;which&nbsp;can&nbsp;be&nbsp;input&nbsp;OR&nbsp;use&nbsp;the&nbsp;values&nbsp;below:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;probability_joining&nbsp;=&nbsp;0.5<br>
+&nbsp;&nbsp;&nbsp;&nbsp;node.intersection_time_cost&nbsp;=&nbsp;0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge.edge_length&nbsp;=&nbsp;5<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge.max_speed&nbsp;=&nbsp;1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge.max_capacity&nbsp;=&nbsp;100</tt></dd></dl>
+
+<dl><dt><a name="NetworkGenerator-generate_complete_bidirectional_network_default_values"><strong>generate_complete_bidirectional_network_default_values</strong></a>(self, number_nodes, default_edge_length=5, default_max_speed=1, default_max_capacity=100)</dt><dd><tt>Generates&nbsp;a&nbsp;complete&nbsp;Network&nbsp;consisting&nbsp;of&nbsp;number_nodes&nbsp;Nodes,&nbsp;each&nbsp;connected&nbsp;to&nbsp;every&nbsp;other&nbsp;<a href="#Node">Node</a>&nbsp;in&nbsp;both&nbsp;directions.<br>
+This&nbsp;Network&nbsp;uses&nbsp;default&nbsp;values&nbsp;for&nbsp;many&nbsp;<a href="#Node">Node</a>&nbsp;and&nbsp;<a href="#Edge">Edge</a>&nbsp;fields,&nbsp;which&nbsp;can&nbsp;be&nbsp;input&nbsp;OR&nbsp;use&nbsp;the&nbsp;values&nbsp;below:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;node.intersection_time_cost&nbsp;=&nbsp;0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge.edge_length&nbsp;=&nbsp;5<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge.max_speed&nbsp;=&nbsp;1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;edge.max_capacity&nbsp;=&nbsp;100</tt></dd></dl>
+
+<dl><dt><a name="NetworkGenerator-output_Network_dictionary"><strong>output_Network_dictionary</strong></a>(self, node_dict, edge_dict)</dt><dd><tt>Returns&nbsp;dictionary&nbsp;containing&nbsp;all&nbsp;<a href="#Node">Node</a>&nbsp;and&nbsp;<a href="#Edge">Edge</a>&nbsp;information&nbsp;for&nbsp;the&nbsp;newly&nbsp;generated&nbsp;Network.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Node">class <strong>Node</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt><a href="#Node">Node</a>(id)&nbsp;-&amp;gt;&nbsp;None<br>
+&nbsp;<br>
+<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Node-__init__"><strong>__init__</strong></a>(self, id) -&gt; None</dt><dd><tt>Contains&nbsp;all&nbsp;attributes&nbsp;necessary&nbsp;for&nbsp;creating&nbsp;a&nbsp;network&nbsp;intersection&nbsp;(<a href="#Node">Node</a>).<br>
+Attributes:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;id:&nbsp;&nbsp;Unique&nbsp;ID&nbsp;associated&nbsp;with&nbsp;this&nbsp;<a href="#Node">Node</a>&nbsp;<a href="builtins.html#object">object</a>.<br>
+&nbsp;&nbsp;&nbsp;&nbsp;intersection_time_cost:&nbsp;&nbsp;Value&nbsp;representing&nbsp;time&nbsp;in&nbsp;ticks&nbsp;required&nbsp;to&nbsp;cross&nbsp;intersection.&nbsp;&nbsp;0&nbsp;&lt;=&nbsp;value&nbsp;&lt;&nbsp;1.</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>inf</strong> = inf</td></tr></table>
+</body></html>

@@ -196,7 +196,7 @@ class Network:
             car_object.set_current_tick_potential(new_tick_potential)
             
 
-    def path_depth_first_search(self, current_edge_ID, end_edge_ID, visited_list = []):
+    def all_paths_depth_first_search(self, current_edge_ID, end_edge_ID, visited_list = []):
         '''Given a start and end Edge id, return a list of all valid non-looping paths.
         '''
         visited_list.append(current_edge_ID)
@@ -213,7 +213,7 @@ class Network:
             if edge_ID == end_edge_ID:  # destination edge reached
                 valid_paths.append(current_path)
             elif not edge_ID in visited_list:
-                self.path_depth_first_search(edge_ID, end_edge_ID, current_path)
+                self.all_paths_depth_first_search(edge_ID, end_edge_ID, current_path)
 
         return valid_paths
 
@@ -254,6 +254,40 @@ class Network:
                 time_cost += crossing_cost
 
         return time_cost       
+
+
+    def choose_path(self, all_paths_list, metric):
+        '''Given a list of paths from A to B (ex: as calculated using self.all_paths_depth_first_search),
+        returns the "best" path with regards to input metric.
+        Currently supported input metrics:
+            'fastest': best path = minimum total travel time (assuming no congestion).
+            'shortest': best path = shortest total distance in terms of length.
+            'random':  pay no heed to metics, choose an available path at random.
+        Future versions may include metrics like:
+            'fastest_now': best path = minimum travel time after accounting for current Network congestion.
+        '''
+        path_cost_list = []
+
+        if metric == 'fastest':
+            for path in all_paths_list:
+                path_cost = self.path_cost_minimum_time(path)
+                path_cost_list.append(path_cost)
+            index_minimum = path_cost_list.index(min(path_cost_list))
+            return all_paths_list[index_minimum]
+        
+        elif metric == 'shortest':
+            for path in all_paths_list:
+                path_cost = self.path_cost_distance(path)
+                path_cost_list.append(path_cost)
+            index_minimum = path_cost_list.index(min(path_cost_list))
+            return all_paths_list[index_minimum]
+
+        elif metric == 'random':
+            return random.choice(all_paths_list)
+
+        else:
+            raise Exception('"', metric, '" is not a supported metric.  Instead try "fastest", "shortest", or "random".')
+
 
 
 
