@@ -53,10 +53,10 @@ if __name__ == "__main__":
             json.dump(tm.get_snapshot(), f)
 
 
-    # print(tm.graph.path_depth_first_search(5000,5001))
+    # print(tm.graph.all_paths_depth_first_search(5000,5001))
 
-    ng = NetworkGenerator()
-    print(ng.generate_complete_bidirectional_network_default_values(5))
+    # ng = NetworkGenerator()
+    # print(ng.generate_complete_bidirectional_network_default_values(5))
 
 
     

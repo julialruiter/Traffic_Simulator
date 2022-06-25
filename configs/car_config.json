@@ -22,7 +22,7 @@
             "path": [
                 5002
             ],
-            "car_type": "Static"
+            "car_type": "Dynamic"
         }        
     ]
 }

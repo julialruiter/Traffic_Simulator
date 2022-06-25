@@ -199,9 +199,13 @@ class Network:
     def all_paths_depth_first_search(self, current_edge_ID, end_edge_ID, visited_list = []):
         '''Given a start and end Edge id, return a list of all valid non-looping paths.
         '''
+        print("visted", visited_list)
         visited_list.append(current_edge_ID)
+        print("visted", visited_list)
+        print("current_edge", current_edge_ID)
 
         valid_paths = []
+        print(self.edge_ID_to_edge[current_edge_ID])
 
         current_edge_object = self.edge_ID_to_edge[current_edge_ID]
         edge_terminal_node = current_edge_object.get_end_node()  # returns node object
@@ -260,35 +264,33 @@ class Network:
         '''Given a list of paths from A to B (ex: as calculated using self.all_paths_depth_first_search),
         returns the "best" path with regards to input metric.
         Currently supported input metrics:
-            'fastest': best path = minimum total travel time (assuming no congestion).
-            'shortest': best path = shortest total distance in terms of length.
-            'random':  pay no heed to metics, choose an available path at random.
+            'Fastest': best path = minimum total travel time (assuming no congestion).
+            'Shortest': best path = shortest total distance in terms of length.
+            'Random':  pay no heed to metics, choose an available path at random.
         Future versions may include metrics like:
-            'fastest_now': best path = minimum travel time after accounting for current Network congestion.
+            'Fastest_now': best path = minimum travel time after accounting for current Network congestion.
         '''
         path_cost_list = []
 
-        if metric == 'fastest':
+        if metric == 'Fastest':
             for path in all_paths_list:
                 path_cost = self.path_cost_minimum_time(path)
                 path_cost_list.append(path_cost)
             index_minimum = path_cost_list.index(min(path_cost_list))
             return all_paths_list[index_minimum]
         
-        elif metric == 'shortest':
+        elif metric == 'Shortest':
             for path in all_paths_list:
                 path_cost = self.path_cost_distance(path)
                 path_cost_list.append(path_cost)
             index_minimum = path_cost_list.index(min(path_cost_list))
             return all_paths_list[index_minimum]
 
-        elif metric == 'random':
+        elif metric == 'Random':
             return random.choice(all_paths_list)
 
         else:
-            raise Exception('"', metric, '" is not a supported metric.  Instead try "fastest", "shortest", or "random".')
-
-
+            raise Exception('"', metric, '" is not a supported metric.  Instead try "Fastest", "Shortest", or "Random".')
 
 
 class Node:
@@ -348,6 +350,15 @@ class Node:
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
             remaining_potential = car.get_current_tick_potential()
             if remaining_potential >= intersection_crossing_cost:
+                # if car.get_car_type() == 'Dynamic':   # TODO:  fix reference to Network Class from Nodes Function
+                #     # recalculate path:
+                #     route_metric = car.get_route_metric()
+                #     print(car.get_current_edge(), car.get_end_edge())
+                #     all_possible_paths = Network.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge(),[])
+                #     new_path = Network.choose_path(all_possible_paths, route_metric)
+                #     car.set_path(new_path)
+
+                # place car on next Edge in path
                 car_path = car.get_path()
                 next_edge_ID = car_path[0]      
                 # print("Node Outbound Dict:", self.outbound_edge_ID_to_edge)
@@ -701,8 +712,8 @@ class Car:
             end_pos_meter:  Unit position along end_edge at which the Car terminates its journey and leaves the Network.
             path:  Ordered list of Edges that the Car will traverse to get from start to end.
             car_type:  Car classification for path-following:
-                if 'static':  Car follows predetermined path.  If no path assigned, a path is generated when the Car is added to the simulation.
-                if 'dynamic':  Car will recalculate its route every time it reaches a Node.  (Will be implemented in future versions of the software).
+                if 'Static':  Car follows predetermined path.  If no path assigned, a path is generated when the Car is added to the simulation.
+                if 'Dynamic':  Car will recalculate its route every time it reaches a Node.  (Will be implemented in future versions of the software).
             mobile:  Car classification for mobility:
                 if True:  Car is eligible to move (default).
                 if False:  Car has been halted and will not move until further instructions given.
@@ -724,6 +735,7 @@ class Car:
         self.end_pos_meter = end_pos_meter
         self.path = path
         self.car_type = car_type
+        self.route_preference = 'Random'   # TODO:  set later, make "Random" default value
         self.mobile = True          # Default.  Toggle to False if API call received OR route complete
         self.route_status = 'In progress'   # Default.  There are also 'Paused' and 'Completed' states.
 
@@ -795,7 +807,7 @@ class Car:
 
     def get_car_type(self):
         '''Returns self.car_type.
-        Value is "static" (Car remains on its original path) or "dynamic" (Car recalculates path at every Node crossing).
+        Value is "Static" (Car remains on its original path) or "Dynamic" (Car recalculates path at every Node crossing).
         Used when calling value from outside the Car class.
         '''
         return self.car_type
@@ -820,6 +832,13 @@ class Car:
         Used when calling value from outside the Car class.
         '''
         return self.route_status
+    
+    def get_route_metric(self):
+        '''Returns self.route_preference.  Used when a Car's path needs to be (re)calculated.
+        Value is "Shortest", "Fastest", "Random", with "Random" being the default value if none specified.
+        Used when calling value from outside the Car class.
+        '''
+        return self.route_preference
 
     def set_route_status(self, new_string):
         '''Updates self.route_status to new_string.
