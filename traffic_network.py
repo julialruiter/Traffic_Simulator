@@ -484,7 +484,7 @@ class Node:
 
 
 class Edge:
-    def __init__(self, 
+    def __init__(self,                # TODO:  move value comments to thesis paper
                  id, 
                  start_node_id, 
                  end_node_id, 
@@ -500,15 +500,17 @@ class Edge:
             start_node:  Node object represented by start_node_id.
             end_node:  Node object represented by end_node_id.
             edge_length:  Physical length of the Edge (ex: meter length of a road).
+                default value can be found and adjusted at edge_default_config["edge_length"]
             max_speed:  (optional) Unit speed limit of the road.  Without obstructions, this is the maximum distance a Car can move on this Edge in one tick.
+                default value can be found and adjusted at edge_default_config["max_speed"]
             max_capacity:  (optional) Maximum number of Car objects allowed on the Edge (max length of current_cars).
+                default value can be found and adjusted at edge_default_config["max_capacity"]
             edge_car_ID_to_car:  Dictionary containing all Car objects associated with the Edge; maps Car IDs to Car objects.
             current_cars:  List of IDs of all Cars currently on the Edge.
             waiting_cars:  List of IDs for Cars that are trying to enter the Network at this Edge.
             processed_cars:  List capturing IDs of Cars that have already been processed on the current tick.  Becomes current_cars at the end of the Edge tick.
             completed_cars:  List of IDs of any Cars that have completed their route on this Edge in the duration of the simulation.
         Note:  some attributes have been given default values in the case that the user did not provide them.
-        Please see "DEFAULT_edge_values_config.json for a list of which fields are have default values availabile and what they are.
         '''
         self.id = id
 

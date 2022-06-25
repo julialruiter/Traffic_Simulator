@@ -54,8 +54,8 @@ if __name__ == "__main__":
 
 
 
-    # ng = NetworkGenerator()
-    # print(ng.generate_complete_bidirectional_network_default_values(5))
+    ng = NetworkGenerator()
+    print(ng.generate_complete_bidirectional_network_default_values(5))
 
 
     

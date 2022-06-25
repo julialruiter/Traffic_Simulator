@@ -5,7 +5,7 @@ import random
 class NetworkGenerator:
     def __init__(self) -> None:
         '''Class containing various functions for generation Network objects for the simulation to run on.
-        Th Network can also be provided via custom JSON file instead.
+        A Network can also be provided via custom JSON file instead.
         '''
         self.info = "Please see individual generator functions for more info."
 
@@ -32,17 +32,12 @@ class NetworkGenerator:
         return snapshot
 
 
-    def generate_complete_bidirectional_network_default_values(self, number_nodes, 
-                                                               default_edge_length = 5,
-                                                               default_max_speed = 1,
-                                                               default_max_capacity = 100
-                                                               ):
+    def generate_complete_bidirectional_network_default_values(self, number_nodes):
         '''Generates a complete Network consisting of number_nodes Nodes, each connected to every other Node in both directions.
-        This Network uses default values for many Node and Edge fields, which can be input OR use the values below:
+        This Network uses the following default value:
             node.intersection_time_cost = 0
-            edge.edge_length = 5
-            edge.max_speed = 1
-            edge.max_capacity = 100
+        Please note that this NetworkGenerator function only generates the barebone structures necessary for a Network. 
+        All additional attributes will be loaded via "DEFAULT_edge_values_config.json" during the simulation process.
         '''
         number_nodes = number_nodes
         # create Node objects
@@ -56,9 +51,6 @@ class NetworkGenerator:
             
         # create Edge objects -- requires Nodes to exist first
         edge_index_counter = 0
-        edge_length = default_edge_length
-        max_speed = default_max_speed
-        max_capacity = default_max_capacity
 
         for start_node in range(0,number_nodes):
             for end_node in range(0,number_nodes):
@@ -68,7 +60,7 @@ class NetworkGenerator:
                     # ensure uniquw Edge IDs
                     edge_ID = edge_index_counter
                     edge_index_counter += 1
-                    new_inbound_edge = Edge(edge_ID, start_node, end_node, edge_length, max_speed, max_capacity)
+                    new_inbound_edge = Edge(edge_ID, start_node, end_node)
                     complete_network_edge_ID_to_edge[edge_ID] = new_inbound_edge
         
         # return complete_network_node_ID_to_node, complete_network_edge_ID_to_edge
@@ -76,20 +68,15 @@ class NetworkGenerator:
         return network_dict
 
 
-    def create_ER_network_default_values(self, number_nodes, probability_joining = 0.5,
-                                         default_edge_length = 5,
-                                         default_max_speed = 1,
-                                         default_max_capacity = 100
-                                         ):
+    def create_ER_network_default_values(self, number_nodes, probability_joining = 0.5):
         '''Creates an Erdos Renyi Network based on the given parameters:
         A each pair of nodes has a probability_joining (0 < p < 1) of being connected in an ER Network.
         As this is a directional Network, each pair will be considered separately per direction.
-        This Network uses default values for many Node and Edge fields, which can be input OR use the values below:
-            probability_joining = 0.5
+        This Network uses the following default values:
+            probability_joining = 0.5           # can be overwriten via user input
             node.intersection_time_cost = 0
-            edge.edge_length = 5
-            edge.max_speed = 1
-            edge.max_capacity = 100        
+        Please note that this NetworkGenerator function only generates the barebone structures necessary for a Network. 
+        All additional attributes will be loaded via "DEFAULT_edge_values_config.json" during the simulation process.
         '''
         number_nodes = number_nodes
         # create Node objects
@@ -103,9 +90,6 @@ class NetworkGenerator:
             
         # create Edge objects -- requires Nodes to exist first
         edge_index_counter = 0
-        edge_length = default_edge_length
-        max_speed = default_max_speed
-        max_capacity = default_max_capacity
 
         for start_node in range(0,number_nodes):
             for end_node in range(0,number_nodes):
@@ -117,7 +101,7 @@ class NetworkGenerator:
                     if random_number <= probability_joining:
                         edge_ID = edge_index_counter
                         edge_index_counter += 1
-                        new_inbound_edge = Edge(edge_ID, start_node, end_node, edge_length, max_speed, max_capacity)
+                        new_inbound_edge = Edge(edge_ID, start_node, end_node)
                         complete_network_edge_ID_to_edge[edge_ID] = new_inbound_edge
 
 
@@ -137,22 +121,24 @@ class Edge:
                  id, 
                  start_node_id, 
                  end_node_id, 
-                 edge_length, 
-                 max_speed = 0.028,           # default value 0.028 m/s, or about 100 km/h
-                 max_capacity = inf           # inf implies no metering/no artificial limit on number of cars allowed on road segment
-                 ) -> None:                   # NOTE:  adjust if more fields required
+                 edge_length = None, 
+                 max_speed = None,          
+                 max_capacity = None 
+                 ) -> None:                  
         '''Contains all attributes necessary for creating a road segment (Edge).
-        Attributes:
+        Attributes generated in all NetworkGenerator functions:
             id:  Unique ID associated with this Edge object.
             start_node_id:  Node from which this Edge originates.
             end_node_id:  Node from which this Edge terminates.
+        Attributes generated only in probabilistic NetworkGenerator functions:
             edge_length:  Physical length of the Edge (ex: meter length of a road).
             max_speed:  (optional) Unit speed limit of the road.  Without obstructions, this is the maximum distance a Car can move on this Edge in one tick.
             max_capacity:  (optional) Maximum number of Car objects allowed on the Edge.
-            '''
+        '''
         self.id = id
         self.start_node_id = start_node_id
         self.end_node_id = end_node_id
+
         self.edge_length = edge_length
         self.max_speed = max_speed
         self.max_capacity = max_capacity
