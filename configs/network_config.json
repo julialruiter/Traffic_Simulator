@@ -37,6 +37,14 @@
             "edge_length": 23,
             "max_speed": 4, 
             "max_capacity": 3
+        },
+        {
+            "start_node": 3,
+            "end_node": 2,
+            "edge_ID": 5003,
+            "edge_length": 5,
+            "max_speed": 2, 
+            "max_capacity": 3
         }
     ]
 }

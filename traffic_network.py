@@ -63,7 +63,7 @@ class Network:
     def add_node(self, node):
         '''Imports node(s) from given node dictionary and adds them to the network.
         '''
-        new_node = Node(node["node_ID"])
+        new_node = Node(node["node_ID"], self)  # adds Network reference
         if self.node_ID_to_node[new_node.get_node_ID()]:
             raise Exception("There is already a Node with this ID")
         self.node_ID_to_node[new_node.get_node_ID()] = new_node
@@ -196,29 +196,27 @@ class Network:
             car_object.set_current_tick_potential(new_tick_potential)
             
 
-    def all_paths_depth_first_search(self, current_edge_ID, end_edge_ID, visited_list = []):
-        '''Given a start and end Edge id, return a list of all valid non-looping paths.
+    def all_paths_depth_first_search(self, current_edge_ID, end_edge_ID, visited_list = [], valid_paths = []):
+        '''Given a start and end Edge id, return a list of all valid paths that do not repeat Edges.
         '''
-        print("visted", visited_list)
         visited_list.append(current_edge_ID)
-        print("visted", visited_list)
-        print("current_edge", current_edge_ID)
-
-        valid_paths = []
-        print(self.edge_ID_to_edge[current_edge_ID])
-
+        
         current_edge_object = self.edge_ID_to_edge[current_edge_ID]
         edge_terminal_node = current_edge_object.get_end_node()  # returns node object
-        neighbouring_edge_IDs_list = edge_terminal_node.get_node_outbound()
+        neighbouring_edge_IDs_list = list(edge_terminal_node.get_node_outbound())
 
         for edge_ID in neighbouring_edge_IDs_list:
             current_path = copy.deepcopy(visited_list)
 
             if edge_ID == end_edge_ID:  # destination edge reached
+                current_path.append(edge_ID)
                 valid_paths.append(current_path)
-            elif not edge_ID in visited_list:
-                self.all_paths_depth_first_search(edge_ID, end_edge_ID, current_path)
 
+            elif not edge_ID in visited_list:
+                self.all_paths_depth_first_search(edge_ID, end_edge_ID, current_path, valid_paths)
+
+        print("Path calculator, current edge ID:", current_edge_ID)        
+        print("Valid_paths so far: ", valid_paths)
         return valid_paths
 
 
@@ -294,7 +292,7 @@ class Network:
 
 
 class Node:
-    def __init__(self, id) -> None:
+    def __init__(self, id, Network_reference) -> None:
         '''Contains all functions and attributes pertaining to a network intersection (Node).
         Attributes:
             id:  Unique ID associated with this Node object.
@@ -306,6 +304,7 @@ class Node:
         self.inbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.intersection_time_cost = 0    # weight representing time (ex: time it takes to transverse intersection)
+        self.Network_pointer = Network_reference
 
     def add_to_inbound(self, edge):
         '''Used when adding an Edge to the Network when Edge.end_node == self.id .
@@ -323,6 +322,7 @@ class Node:
         '''Outputs dictionary of Node attributes.
         '''
         raw = copy.deepcopy(self.__dict__)
+        network_pointer = raw.pop("Network_pointer", {})
 
         outbound_processing = raw.pop("outbound_edge_ID_to_edge", {})
         raw["outbound_edges"] = list(outbound_processing.keys())
@@ -349,14 +349,20 @@ class Node:
         for car in candidate_cars_list:
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
             remaining_potential = car.get_current_tick_potential()
+            print("NODE TICK OUTPUT")
             if remaining_potential >= intersection_crossing_cost:
-                # if car.get_car_type() == 'Dynamic':   # TODO:  fix reference to Network Class from Nodes Function
-                #     # recalculate path:
-                #     route_metric = car.get_route_metric()
-                #     print(car.get_current_edge(), car.get_end_edge())
-                #     all_possible_paths = Network.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge(),[])
-                #     new_path = Network.choose_path(all_possible_paths, route_metric)
-                #     car.set_path(new_path)
+                if car.get_car_type() == 'Dynamic':   # TODO:  fix reference to Network Class from Nodes Function
+                    # recalculate path:
+                    route_metric = car.get_route_metric()
+                    print("Current edge: ", car.get_current_edge(), "; End edge: ", car.get_end_edge())
+                    all_possible_paths = self.Network_pointer.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge(),[])
+                    print("NODE TICK OUTPUT")
+                    print(all_possible_paths)
+                    new_path = self.Network_pointer.choose_path(all_possible_paths, route_metric)
+                    print("new_path: ", self.Network_pointer.choose_path(all_possible_paths, route_metric))
+                    # new_path.pop(0)  # remove current edge
+                    #car.set_path(new_path)
+                    #print(car.get_path)
 
                 # place car on next Edge in path
                 car_path = car.get_path()
@@ -373,7 +379,7 @@ class Node:
                 car.set_current_pos_meter_car_front(0) 
                 new_potential = remaining_potential - intersection_crossing_cost  
                 car.set_current_tick_potential(new_potential)
-                car.get_path().pop(0)      # remove current edge from upcoming path
+                #car.get_path().pop(0)      # remove current edge from upcoming path
             else:
                 # place car back on original edge
                 current_edge = car.get_current_edge()
@@ -735,7 +741,7 @@ class Car:
         self.end_pos_meter = end_pos_meter
         self.path = path
         self.car_type = car_type
-        self.route_preference = 'Random'   # TODO:  set later, make "Random" default value
+        self.route_preference = 'Shortest'   # TODO:  set later, make "Random" default value
         self.mobile = True          # Default.  Toggle to False if API call received OR route complete
         self.route_status = 'In progress'   # Default.  There are also 'Paused' and 'Completed' states.
 
