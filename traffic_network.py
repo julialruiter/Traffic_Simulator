@@ -353,7 +353,7 @@ class Node:
         '''Outputs dictionary of Node attributes.
         '''
         raw = copy.deepcopy(self.__dict__)
-        network_pointer = raw.pop("Network_pointer", {})
+        raw.pop("Network_pointer", {})  # exclude from snapshot
 
         outbound_processing = raw.pop("outbound_edge_ID_to_edge", {})
         raw["outbound_edges"] = list(outbound_processing.keys())
@@ -397,13 +397,21 @@ class Node:
                 next_edge_ID = car_path[0]    
                 next_edge_object = self.outbound_edge_ID_to_edge[next_edge_ID]
 
-                # move to position 0 at new edge
-                next_edge_object.move_existing_car_to_edge(car)           
-                car.set_current_edge(next_edge_ID)                        
-                car.set_current_pos_meter_car_front(0) 
-                new_potential = remaining_potential - intersection_crossing_cost  
-                car.set_current_tick_potential(new_potential)
-                car.get_path().pop(0)      # remove current edge from upcoming path
+                # check next edge for capacity
+                if len(next_edge_object.get_current_cars()) < next_edge_object.get_max_capacity():
+                    # move to position 0 at new edge
+                    next_edge_object.move_existing_car_to_edge(car)           
+                    car.set_current_edge(next_edge_ID)                        
+                    car.set_current_pos_meter_car_front(0) 
+                    new_potential = remaining_potential - intersection_crossing_cost  
+                    car.set_current_tick_potential(new_potential)
+                    car.get_path().pop(0)      # remove current edge from upcoming path
+                else:                
+                    # place car back on original edge
+                    current_edge = car.get_current_edge()
+                    current_edge_object = self.inbound_edge_ID_to_edge[current_edge]
+                    current_edge_object.move_existing_car_to_edge(car)        # reassociate car and edge with each other
+
             else:
                 # place car back on original edge
                 current_edge = car.get_current_edge()
@@ -554,7 +562,9 @@ class Edge:
                 expended_energy += waiting_car.get_max_tick_potential()
                 sum_maximum_expendible_energy += waiting_car.get_max_tick_potential()
                 waiting_car.set_current_tick_potential(0)     # all energy used entering network
-            self.waiting_cars = []                     
+            self.waiting_cars = []
+        else:
+            print("Edge ", self.id, "has no capacity for waiting cars.  Will try again next tick.")                     
 
         # Process current cars on edge
         prev_car_back = self.edge_length  # max position a car can travel, resets with each car
