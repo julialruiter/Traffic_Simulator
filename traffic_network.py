@@ -334,6 +334,7 @@ class Node:
 
     def tick(self):
         '''Facilitates Edge ticks and movement of Car objects from one Edge to another.
+        If a Car that is eligible to cross the Node has type "Dynamic", then its path is recalculated upon crossing.
         Each Node tick shuffles the order in which Edges tick to ensure no particular Edge is favored. 
         '''
         print("Current Node Tick: ", self.id)
@@ -349,29 +350,19 @@ class Node:
         for car in candidate_cars_list:
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
             remaining_potential = car.get_current_tick_potential()
-            print("NODE TICK OUTPUT")
             if remaining_potential >= intersection_crossing_cost:
                 if car.get_car_type() == 'Dynamic':   # TODO:  fix reference to Network Class from Nodes Function
                     # recalculate path:
                     route_metric = car.get_route_metric()
-                    print("Current edge: ", car.get_current_edge(), "; End edge: ", car.get_end_edge())
-                    all_possible_paths = self.Network_pointer.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge(),[])
-                    print("NODE TICK OUTPUT")
-                    print(all_possible_paths)
+                    all_possible_paths = self.Network_pointer.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge())
                     new_path = self.Network_pointer.choose_path(all_possible_paths, route_metric)
-                    print("new_path: ", self.Network_pointer.choose_path(all_possible_paths, route_metric))
-                    # new_path.pop(0)  # remove current edge
-                    #car.set_path(new_path)
-                    #print(car.get_path)
+                    new_path.pop(0)  # remove current edge
+                    car.set_path(new_path)
 
                 # place car on next Edge in path
                 car_path = car.get_path()
                 next_edge_ID = car_path[0]      
-                # print("Node Outbound Dict:", self.outbound_edge_ID_to_edge)
-                # print(next_edge_ID)
                 next_edge_object = self.outbound_edge_ID_to_edge[next_edge_ID]
-                # print(self.outbound_edge_ID_to_edge)
-                # print(next_edge_object)
 
                 # move to position 0 at new edge
                 next_edge_object.move_existing_car_to_edge(car)           
