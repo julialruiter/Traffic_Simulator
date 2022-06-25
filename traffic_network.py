@@ -215,8 +215,8 @@ class Network:
             elif not edge_ID in visited_list:
                 self.all_paths_depth_first_search(edge_ID, end_edge_ID, current_path, valid_paths)
 
-        print("Path calculator, current edge ID:", current_edge_ID)        
-        print("Valid_paths so far: ", valid_paths)
+        # print("Path calculator, current edge ID:", current_edge_ID)        
+        # print("Valid_paths so far: ", valid_paths)
         return valid_paths
 
 
@@ -354,14 +354,16 @@ class Node:
                 if car.get_car_type() == 'Dynamic':   # TODO:  fix reference to Network Class from Nodes Function
                     # recalculate path:
                     route_metric = car.get_route_metric()
-                    all_possible_paths = self.Network_pointer.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge())
+                    all_possible_paths = self.Network_pointer.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge(), [], [])
                     new_path = self.Network_pointer.choose_path(all_possible_paths, route_metric)
-                    new_path.pop(0)  # remove current edge
+                    if len(new_path) <= 1:
+                        raise Exception("There is no possible path to this car's destination.")
+                    new_path = new_path[1:]    # remove current edge
                     car.set_path(new_path)
 
                 # place car on next Edge in path
                 car_path = car.get_path()
-                next_edge_ID = car_path[0]      
+                next_edge_ID = car_path[0]    
                 next_edge_object = self.outbound_edge_ID_to_edge[next_edge_ID]
 
                 # move to position 0 at new edge
@@ -370,7 +372,7 @@ class Node:
                 car.set_current_pos_meter_car_front(0) 
                 new_potential = remaining_potential - intersection_crossing_cost  
                 car.set_current_tick_potential(new_potential)
-                #car.get_path().pop(0)      # remove current edge from upcoming path
+                car.get_path().pop(0)      # remove current edge from upcoming path
             else:
                 # place car back on original edge
                 current_edge = car.get_current_edge()
@@ -392,8 +394,6 @@ class Node:
         '''Checks all inbound edges of a Node.  
         Any edge that has a Car at the end position of its length is considered a candidate to advance on to the next Edge in its path.
         '''
-        # TODO:  recalculate route if car type dynamic"
-
         outbound_candidates = collections.defaultdict(lambda: None)
         for inbound_edge_ID in list(self.inbound_edge_ID_to_edge.keys()):
             inbound_edge = self.inbound_edge_ID_to_edge[inbound_edge_ID]
@@ -685,6 +685,7 @@ class Edge:
     def move_existing_car_to_edge(self, car):
         '''Adds Car object to the 'processed-cars' list and links Car to (new) Edge on Car ID.
         '''
+        print("move existing troubleshooting: ", self.id)
         self.processed_cars.append(car)     
         self.edge_car_ID_to_car[car.get_car_ID()] = car
 
@@ -732,7 +733,7 @@ class Car:
         self.end_pos_meter = end_pos_meter
         self.path = path
         self.car_type = car_type
-        self.route_preference = 'Shortest'   # TODO:  set later, make "Random" default value
+        self.route_preference = 'Random'   # TODO:  set later, make "Random" default value
         self.mobile = True          # Default.  Toggle to False if API call received OR route complete
         self.route_status = 'In progress'   # Default.  There are also 'Paused' and 'Completed' states.
 
