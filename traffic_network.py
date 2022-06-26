@@ -303,7 +303,7 @@ class Network:
 
      
     def path_cost_minimum_time(self, path_list):
-        '''Given path_list, evaluate the the minimum time it would take to travel (in ticks).
+        '''Given path_list, evaluate the the minimum time it would take to travel (in ticks) given each Edge's max_speed.
         Minimum time is calculated assuming a car is able to travel the maximum speed per edge unencumbered.
         This function assumes that the entirety of each Edge is traveled and includes any Node-crossing time penalties.
         Note:  time cost does NOT include Node-crossing time out of the final edge as the Car is expected to exit the Network before the Edge's end.
@@ -328,7 +328,7 @@ class Network:
 
 
     def choose_path(self, all_paths_list, metric):
-        '''Given a list of paths from A to B (ex: as calculated using self.all_paths_depth_first_search),
+        '''Given a list of paths from A to B (ex: as calculated using self.all_paths_depth_first_search()),
         returns the "best" path with regards to input metric.
         Currently supported input metrics:
             'Fastest': best path = minimum total travel time (assuming no congestion).

@@ -127,3 +127,34 @@ class TrafficManager:
         car_object = self.graph.car_ID_to_car[car_id]
         car_object.set_mobility(True)
         car_object.route_status = 'In progress'
+
+    def get_all_paths_A_to_B(self, start_edge_ID, end_edge_ID):
+        '''API function:  Given a start and end Edge id, return a list of all valid paths that do not repeat Edges.
+        '''
+        return self.graph.all_paths_depth_first_search(self, start_edge_ID, end_edge_ID, [], [])
+
+    def get_path_distance(self, path):
+        '''API function:  Given the ordered list of Edges as "path", evaluate the total distance it would take to travel.
+        This function assumes that the entirety of each Edge is traveled.
+        '''
+        return self.graph.path_cost_distance(self, path)
+
+    def get_path_minimum_time(self, path):
+        '''API function:  Given the ordered list of Edges as "path", evaluate the the minimum time it would take to travel (in ticks) given each Edge's speed limit.
+        Minimum time is calculated assuming a car is able to travel the maximum speed per edge unencumbered.
+        This function assumes that the entirety of each Edge is traveled and includes any Node-crossing time penalties.
+        Note:  time cost does NOT include Node-crossing time out of the final edge as the Car is expected to exit the Network before the Edge's end.
+        '''
+        return self.graph.path_cost_minimum_time(self, path)
+
+    def get_shortest_path_A_to_B(self, all_paths_list):
+        '''API function:  Given all_paths_list (a list of paths from A to B as calculated using self.get_all_paths_A_to_B()),
+        returns the path with the shortest total distance in terms of length.
+        '''
+        return self.graph.choose_path(self, all_paths_list, "Shortest")
+
+    def get_theoretical_fastest_path_A_to_B(self, all_paths_list):
+        '''API function:  Given all_paths_list (a list of paths from A to B as calculated using self.get_all_paths_A_to_B()),
+        returns the path with the minimum total travel time (assuming no congestion).
+        '''
+        return self.graph.choose_path(self, all_paths_list, "Fastest")
