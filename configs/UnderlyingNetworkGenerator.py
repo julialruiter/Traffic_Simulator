@@ -46,7 +46,7 @@ class NetworkGenerator:
 
         for node_index in range(0,number_nodes):
             node_ID = node_index
-            new_node = Node(node_ID)
+            new_node = GeneratorNode(node_ID)
             complete_network_node_ID_to_node[node_ID] = new_node
             
         # create Edge objects -- requires Nodes to exist first
@@ -57,10 +57,10 @@ class NetworkGenerator:
                 if start_node == end_node:
                     pass  # no looping roads allowed
                 else:
-                    # ensure uniquw Edge IDs
+                    # ensure unique Edge IDs
                     edge_ID = edge_index_counter
                     edge_index_counter += 1
-                    new_inbound_edge = Edge(edge_ID, start_node, end_node)
+                    new_inbound_edge = GeneratorEdge(edge_ID, start_node, end_node)
                     complete_network_edge_ID_to_edge[edge_ID] = new_inbound_edge
         
         # return complete_network_node_ID_to_node, complete_network_edge_ID_to_edge
@@ -85,7 +85,7 @@ class NetworkGenerator:
 
         for node_index in range(0,number_nodes):
             node_ID = node_index
-            new_node = Node(node_ID)
+            new_node = GeneratorNode(node_ID)
             complete_network_node_ID_to_node[node_ID] = new_node
             
         # create Edge objects -- requires Nodes to exist first
@@ -101,11 +101,11 @@ class NetworkGenerator:
                     if random_number <= probability_joining:
                         edge_ID = edge_index_counter
                         edge_index_counter += 1
-                        new_inbound_edge = Edge(edge_ID, start_node, end_node)
+                        new_inbound_edge = GeneratorEdge(edge_ID, start_node, end_node)
                         complete_network_edge_ID_to_edge[edge_ID] = new_inbound_edge
 
 
-class Node:
+class GeneratorNode:
     def __init__(self, id) -> None:
         '''Contains all attributes necessary for creating a network intersection (Node).
         Attributes:
@@ -116,7 +116,7 @@ class Node:
         self.intersection_time_cost = 0 
 
 
-class Edge:
+class GeneratorEdge:
     def __init__(self, 
                  id, 
                  start_node_id, 
