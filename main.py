@@ -1,5 +1,5 @@
 from Traffic import TrafficManager
-from UnderlyingNetworkGenerator import NetworkGenerator
+from configs.UnderlyingNetworkGenerator import NetworkGenerator
 import json
 
 if __name__ == "__main__":
