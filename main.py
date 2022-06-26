@@ -5,7 +5,7 @@ import json
 if __name__ == "__main__":
     network_config = None
     try:
-        with open("./configs/network_config.json") as json_file:   # need fully qualified path, not relative
+        with open("./configs/EXAMPLE_network_config.json") as json_file:   # need fully qualified path, not relative
             network_config = json.load(json_file)
             # print(network_config)
     except Exception as E:
@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     car_config = None
     try:
-        with open("./configs/car_config.json") as car_file:   # need fully qualified path, not relative
+        with open("./configs/EXAMPLE_car_config.json") as car_file:   # need fully qualified path, not relative
             car_config = json.load(car_file)
     except Exception as E:
         print(E)
