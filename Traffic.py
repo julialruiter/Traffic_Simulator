@@ -8,7 +8,8 @@ class TrafficManager:
             graph:  Network object that the TrafficManager runs on.
             timestamp:  Simulation timestamp.
         '''
-        self.graph = Network(network_config)
+        self.graph = Network(self, network_config)
+        self.Network_pointer = self.graph.get_Network_pointer()
         self.timestamp = 0
         
     

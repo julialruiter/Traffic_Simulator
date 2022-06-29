@@ -5,20 +5,23 @@ from cmath import inf
 import json
 
 class Network:
-    def __init__(self, config) -> None:
+    def __init__(self, TrafficManagerPointer, config) -> None:
         '''Contains all functions and attributes pertaining to the (road) network as a whole.
         Attributes:
+            TrafficManager_pointer:  Identifies which TrafficManger simulation is associated with this network
             node_ID_to_node:  Dictionary mapping Node IDs to Node objects.
             edge_ID_to_edge:  Dictionary mapping Edge IDs to Edge objects.
             car_ID_to_car:  Dictionary mapping Car IDs to Car objects.
-
+            global_tick:  Tick index, aligns with TrafficManager tick
         '''
+        self.TrafficManager_pointer = TrafficManagerPointer
         self.node_ID_to_node = collections.defaultdict(lambda: None)
         self.edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.car_ID_to_car = collections.defaultdict(lambda: None)
         self.edge_default_config = {}
         self.node_default_config = {}
         self.car_default_config = {}
+        self.global_tick = 0
 
         # load edge default config
         try:
@@ -48,6 +51,10 @@ class Network:
         for edge in config["edge_list"]:
             self.add_edge(edge)
 
+    def get_Network_pointer(self):
+        '''Returns a pointer to this Network instance.
+        Useful for directly generating cars OR keeping track managing multiple simulations at once.'''
+        return self
 
     def get_snapshot(self):
         '''Outputs dictionary containing snapshot data for all nodes and edges in the network.
@@ -87,6 +94,7 @@ class Network:
         snapshot["current_cars"] = car_snapshots_current
         snapshot["completed_cars"] = car_snapshots_completed
         return snapshot
+
 
     def add_node(self, node):
         '''Imports node(s) from given node dictionary and adds them to the network.
