@@ -65,7 +65,7 @@ class TrafficManager:
         pass  
 
     def get_timestamp(self):
-        '''API function:  returns (sequantial) state number.
+        '''API function:  returns (sequential) state number.
         '''
         return self.timestamp  
 
