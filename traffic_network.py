@@ -52,9 +52,15 @@ class Network:
             self.add_edge(edge)
 
     def get_Network_pointer(self):
+        '''Returns tick index (which aligns with TrafficManager tick).
+        '''
+        return self.global_tick
+    
+    def get_global_tick(self):
         '''Returns a pointer to this Network instance.
-        Useful for directly generating cars OR keeping track managing multiple simulations at once.'''
-        return self
+        Useful for directly generating cars OR keeping track managing multiple simulations at once.
+        '''
+        return self.global_tick
 
     def get_snapshot(self):
         '''Outputs dictionary containing snapshot data for all nodes and edges in the network.
@@ -454,14 +460,13 @@ class Node:
         self.outbound_edge_ID_to_edge = collections.defaultdict(lambda: None)
         self.intersection_time_cost = intersection_cost    
 
+        self.Network_pointer = Network_reference     # allows Node to call on Network's path-finding algorithms
+
         self.stoplight_pattern = stoplight_pattern
         self.stoplight_pattern_current_index = 0
         self.stoplight_duration = stoplight_duration
         self.stoplight_delay = stoplight_delay
-        self.node_tick_number = 0
-
-        self.Network_pointer = Network_reference     # allows Node to call on Network's path-finding algorithms
-        
+        self.node_tick_number = self.Network_pointer.get_Network_pointer()
 
 
     def add_to_inbound(self, edge):
@@ -585,8 +590,6 @@ class Node:
         Communication to TrafficManager to establish global tick and increment will be solved in future versions.
         Communication to prevent cars from leaving inbound Edges during the node tick will be established in future versions.
         '''
-        self.node_tick_number += 1
-
         open_time = self.stoplight_duration
         off_time_between = self.stoplight_delay
         one_on_off_cycle = open_time + off_time_between

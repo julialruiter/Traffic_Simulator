@@ -37,21 +37,21 @@ if __name__ == "__main__":
         with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
             json.dump(tm.get_snapshot(), f)
     
-    # tm.pause_car(7000)
+    tm.pause_car(7000)
 
-    # for tick in range(2):
-    #     tm.tick()
-    #     #print("Network Congestion" , tm.tick())
-    #     with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
-    #         json.dump(tm.get_snapshot(), f)
+    for tick in range(2):
+        tm.tick()
+        #print("Network Congestion" , tm.tick())
+        with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
+            json.dump(tm.get_snapshot(), f)
     
-    # tm.resume_car(7000)
+    tm.resume_car(7000)
 
-    # for tick in range(2):
-    #     tm.tick()
-    #     #print("Network Congestion" , tm.tick())
-    #     with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
-    #         json.dump(tm.get_snapshot(), f)
+    for tick in range(2):
+        tm.tick()
+        #print("Network Congestion" , tm.tick())
+        with open(str(tm.get_timestamp()) + '_snapshot.json', 'w') as f:
+            json.dump(tm.get_snapshot(), f)
 
     # # tm.remove_car(7000)
 
