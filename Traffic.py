@@ -9,7 +9,6 @@ class TrafficManager:
             timestamp:  Simulation timestamp.
         '''
         self.graph = Network(self, network_config)
-        self.Network_pointer = self.graph.get_Network_pointer()
         self.timestamp = 0
         
     
