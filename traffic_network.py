@@ -215,13 +215,13 @@ class Network:
         else:
             car_type = self.car_default_config["car_type"]
 
-        if "route_preference" in car:            # TODO:  add to import
+        if "route_preference" in car:           
             route_preference = car["route_preference"]
         else:
             route_preference = self.car_default_config["route_preference"]
 
         if "max_tick_potential" in car:
-            max_tick_potential = car["max_tick_potential"]            # TODO:  add to import
+            max_tick_potential = car["max_tick_potential"]           
         else:
             max_tick_potential = 1
 
@@ -514,7 +514,7 @@ class Node:
             # check if car can be placed on next edge -- allow to exist in intersection (absorbed into intersection cost)
             remaining_potential = car.get_current_tick_potential()
             if remaining_potential >= intersection_crossing_cost:
-                if car.get_car_type() == 'Dynamic':   # TODO:  fix reference to Network Class from Nodes Function
+                if car.get_car_type() == 'Dynamic':   
                     # recalculate path:
                     route_metric = car.get_route_metric()
                     all_possible_paths = self.Network_pointer.all_paths_depth_first_search(car.get_current_edge(), car.get_end_edge(), [], [])
@@ -763,7 +763,7 @@ class Edge:
                     # otherwise move as far as possible
                     distance_to_advance = min(max_distance_current_tick_potential, prev_car_back - current_car_front)      # no buffer distance
                     distance_to_advance_ticks = distance_to_advance/self.max_speed   # percent of possible tick moved
-                    current_car_object.current_tick_potential -= distance_to_advance_ticks  # TODO:  
+                    current_car_object.current_tick_potential -= distance_to_advance_ticks 
                     current_car.current_pos_meter_car_front += distance_to_advance  # actually move
                     expended_energy += current_car.tick(old_potential)   # get potential differential
                     prev_car_back = current_car.current_pos_meter_car_front - current_car.get_car_length()
