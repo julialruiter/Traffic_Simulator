@@ -39,7 +39,7 @@ class TrafficManager:
             energy_used_percent = expended_energy / sum_maximum_expendible_energy
         else:
             energy_used_percent = None 
-        print("Percent of available energy used on tick: ", energy_used_percent)
+        print("Percent of available energy used on tick: ", energy_used_percent*100, "%")
         return energy_used_percent
               
 
@@ -85,6 +85,7 @@ class TrafficManager:
 
     def add_car(self, car):
         '''API function:  place car (dictionary object) onto the network's waiting queue.
+        Please note that the current iteration of add_car only supports placement directly onto Edges (identified by "start_edge").
         '''
         if self.graph.check_valid_car(car) == True:
             self.graph.add_car(car)

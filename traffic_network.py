@@ -18,6 +18,7 @@ class Network:
         self.car_ID_to_car = collections.defaultdict(lambda: None)
         self.edge_default_config = {}
         self.node_default_config = {}
+        self.car_default_config = {}
 
         # load edge default config
         try:
@@ -33,11 +34,20 @@ class Network:
         except:
             print("Node value defaults configuration file is missing.")    
 
+        # load car default config
+        try:
+            with open("./configs/DEFAULT_car_values_config.json") as car_defaults:   # need fully qualified path, not relative
+                self.car_default_config = json.load(car_defaults)
+        except:
+            print("No Car object defaults have been given.  May raise errors if incomplete Car objects are added to the Network.")  
+
+
         # create dictionaries mapping Node and Edge objects to Network
         for node in config["node_list"]:
             self.add_node(node)
         for edge in config["edge_list"]:
             self.add_edge(edge)
+
 
     def get_snapshot(self):
         '''Outputs dictionary containing snapshot data for all nodes and edges in the network.
@@ -122,7 +132,7 @@ class Network:
         '''
         # check if values exist in config, else assign defaults
         if "edge_length" in edge:
-            edge_length= edge["edge_length"]
+            edge_length = edge["edge_length"]
         else:
             edge_length = self.edge_default_config["edge_length"]
 
@@ -164,21 +174,67 @@ class Network:
             raise Exception("Start Node ID is not part of the network.")
 
     def add_car(self, car):
-        '''Places car (object) on the waiting queue for its specified start_edge.
+        '''Places Car (object) on the waiting queue for its specified start_edge.
+        Validity checks have been passed up to the TrafficManager level as a part of "add_car(car)",
+        ensuring that any Cars received are valid OR can be made valid using the DEFAULT_car_values_config.json file.
         '''
+        # check if values exist in config, else assign defaults
+        if "start_pos_meter" in car:
+            start_pos_meter = car["start_pos_meter"]
+        else:    # default to edge start
+            start_pos_meter = 0
+
+        if "end_pos_meter" in car:
+            end_pos_meter = car["end_pos_meter"]
+        else:    # default to edge end
+            end_edge_ID = car["end_edge"]
+            end_edge_object = self.edge_ID_to_edge[end_edge_ID]
+            end_pos_meter = end_edge_object.get_length()
+
+        if "car_length" in car:
+            car_length = car["car_length"]
+        else:
+            car_length = self.car_default_config["car_length"]
+
+        if "car_type" in car:
+            car_type = car["car_type"]
+        else:
+            car_type = self.car_default_config["car_type"]
+
+        if "route_preference" in car:            # TODO:  add to import
+            route_preference = car["route_preference"]
+        else:
+            route_preference = self.car_default_config["route_preference"]
+
+        if "max_tick_potential" in car:
+            max_tick_potential = car["max_tick_potential"]            # TODO:  add to import
+        else:
+            max_tick_potential = 1
+
+        # calculate path if absent, using "route_preference" as the assignment metric
+        if "path" in car:
+            path = car["path"]           
+        else:    
+            potential_paths_list = self.all_paths_depth_first_search(car["start_edge"], car["end_edge"], [], [])
+            path = self.choose_path(potential_paths_list, route_preference)
+
+
+        # create the Car object
         new_car = Car(car["car_ID"],
-                        car["car_length"],
+                        car_length,
                         car["start_edge"],
-                        car["start_pos_meter"],
+                        start_pos_meter,
                         car["end_edge"],
-                        car["end_pos_meter"],
-                        car["path"],
-                        car["car_type"] )
-        # print("We are adding" , new_car.get_car_ID(), new_car)
+                        end_pos_meter,
+                        path,
+                        car_type,
+                        route_preference,
+                        max_tick_potential)
         self.car_ID_to_car[new_car.get_car_ID()] = new_car
         start_edge_ID = new_car.get_start_edge()
         start_edge = self.edge_ID_to_edge[start_edge_ID]
         start_edge.add_car_to_wait_queue(new_car)
+        print("Adding Car" , new_car.get_car_ID(), "to the Network waiting queue.")
 
 
     def check_valid_car(self, car):
@@ -192,10 +248,11 @@ class Network:
         if start_edge_ID not in list(self.edge_ID_to_edge.keys()):
             raise Exception("Start edge does not exist")
 
-        start_pos_meter = car["start_pos_meter"]
-        start_edge = self.edge_ID_to_edge[start_edge_ID]
-        if start_pos_meter > start_edge.get_length():
-            raise Exception("Start position exceeds max edge length")
+        # Default start_pos_meter set to 0 on addition if absent
+        # start_pos_meter = car["start_pos_meter"]
+        # start_edge = self.edge_ID_to_edge[start_edge_ID]
+        # if start_pos_meter > start_edge.get_length():
+        #     raise Exception("Start position exceeds max edge length")
 
         end_edge_ID = car["end_edge"]
         end_edge = self.edge_ID_to_edge[end_edge_ID]
@@ -203,13 +260,17 @@ class Network:
         if end_pos_meter > end_edge.get_length():
             raise Exception("End position exceeds max edge length")
 
-        if car["car_type"] == "static":
-            path_edge_list = car["path"]
-            if path_edge_list[-1] != end_edge_ID:
-                raise Exception("Path invalid: end does not match ")
-            for edge in path_edge_list:
-                if edge not in list(self.edge_ID_to_edge.keys()):
-                    raise Exception("Path has edges that do not exist")
+        # ONLY check path validity if present and unchanging.  Else calculated during "add_car".
+        if "path" in car:  
+            if car["car_type"] == "Static":
+                path_edge_list = car["path"]
+                if path_edge_list[-1] != end_edge_ID:
+                    raise Exception("Path invalid: end does not match ")
+                for edge in path_edge_list:
+                    if edge not in list(self.edge_ID_to_edge.keys()):
+                        raise Exception("Path has edges that do not exist")
+            else:
+                print("Calculating path on placement.")
         return True
         
 
@@ -426,7 +487,7 @@ class Node:
         If a Car that is eligible to cross the Node has type "Dynamic", then its path is recalculated upon crossing.
         Each Node tick shuffles the order in which Edges tick to ensure no particular Edge is favored. 
         '''
-        print("Current Node Tick: ", self.id)
+        # print("Current Node Tick: ", self.id)
         expended_energy = 0                       # work actually done
         sum_maximum_expendible_energy = 0         # maximum work possible
         intersection_crossing_cost = self.intersection_time_cost  # absorbs time delay for crossing intersection
@@ -815,8 +876,11 @@ class Car:
                  start_pos_meter,
                  end_edge,
                  end_pos_meter,
-                 path = [],
-                 car_type = 'Static') -> None:
+                 path,
+                 car_type,
+                 route_preference,
+                 max_tick_potential
+                 ) -> None:
         '''Contains all functions and attributes pertaining to an object traversing the Network (Car).
         Attributes:
             id:  Unique ID associated with this Car object.
@@ -826,9 +890,13 @@ class Car:
             end_edge:  Edge from which this Car terminates its journey.
             end_pos_meter:  Unit position along end_edge at which the Car terminates its journey and leaves the Network.
             path:  Ordered list of Edges that the Car will traverse to get from start to end.
+            route_preference:  Classification determining which type of path will be followed:
+                if 'Fastest': chooses path with minimum total travel time (assuming no congestion).
+                if 'Shortest': chooses path with shortest total distance in terms of length.
+                if 'Random':  pays no heed to metics and instead chooses an available path at random.
             car_type:  Car classification for path-following:
-                if 'Static':  Car follows predetermined path.  If no path assigned, a path is generated when the Car is added to the simulation.
-                if 'Dynamic':  Car will recalculate its route every time it reaches a Node.  (Will be implemented in future versions of the software).
+                if 'Static':  Car follows predetermined path set on addition.
+                if 'Dynamic':  Car will recalculate its route every time it reaches a Node. 
             mobile:  Car classification for mobility:
                 if True:  Car is eligible to move (default).
                 if False:  Car has been halted and will not move until further instructions given.
@@ -840,23 +908,27 @@ class Car:
             current_edge:  Edge ID corresponding to the Car's current location.
             current_pos_meter_car_front:  Unit distance along current_edge corresponding to the Car's current location.  If car_length > 0, this refers to the position of the front of the Car.
             max_tick_potential:  Proportion of global maximum tick time-distance that the Car is eligible to move (default = 1, full potential).
-            current_tick_potential:  Portion of tick time-distance that the car has not utilized on this tick.
+            current_tick_potential:  Portion of tick time-distance that the car has not (yet) utilized on this tick.
             '''
+        # immutable attributes
         self.id = car_ID
         self.car_length = car_length
         self.start_edge = start_edge
         self.start_pos_meter = start_pos_meter
         self.end_edge = end_edge
         self.end_pos_meter = end_pos_meter
-        self.path = path
-        self.car_type = car_type
-        self.route_preference = 'Random'   # TODO:  set later, make "Random" default value
-        self.mobile = True          # Default.  Toggle to False if API call received OR route complete
-        self.route_status = 'In progress'   # Default.  There are also 'Paused' and 'Completed' states.
 
+        # attributes pertaining to travel path
+        self.car_type = car_type
+        self.route_preference = route_preference
+        self.path = path
+
+        # addributes pertaining to current status
+        self.mobile = True                  # Default.  Toggle to False if API call received OR route complete
+        self.route_status = 'In progress'   # Default.  There are also 'Paused' and 'Completed' states.
         self.current_edge = None
         self.current_pos_meter_car_front = None 
-        self.max_tick_potential = 1
+        self.max_tick_potential = max_tick_potential
         self.current_tick_potential = copy.deepcopy(self.max_tick_potential)    # only for initialization
 
 

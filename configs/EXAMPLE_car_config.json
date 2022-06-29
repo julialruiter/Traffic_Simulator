@@ -3,8 +3,8 @@
         {
             "car_ID": 7000,
             "car_length": 2.5, 
-            "start_edge": 5000,
-            "start_pos_meter": 3.2,            
+            "start_pos_meter": 3.2, 
+            "start_edge": 5000,        
             "end_edge": 5002,
             "end_pos_meter": 20.7,
             "path": [
@@ -19,9 +19,6 @@
             "start_pos_meter": 20,            
             "end_edge": 5002,
             "end_pos_meter": 6.5,
-            "path": [
-                5002
-            ],
             "car_type": "Dynamic"
         }        
     ]
