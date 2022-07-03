@@ -1,5 +1,5 @@
 {
-    "car_length": 0,
+    "car_length": 0.00000001,
     "car_type": "Static",
     "route_preference": "Fastest",
     "max_tick_potential": 1

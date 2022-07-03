@@ -130,7 +130,7 @@ class Network:
 
         # create new Node object
         new_node = Node(self,                    # adds Network reference
-                        node["node_ID"], 
+                        node["id"], 
                         intersection_cost,
                         stoplight_pattern,
                         stoplight_duration,
@@ -166,7 +166,7 @@ class Network:
                 print(max_capacity)
 
         # create new Edge object
-        new_edge = Edge(edge["edge_ID"],
+        new_edge = Edge(edge["id"],
                         edge["start_node"],
                         edge["end_node"],
                         edge_length,
@@ -236,7 +236,7 @@ class Network:
 
 
         # create the Car object
-        new_car = Car(car["car_ID"],
+        new_car = Car(car["id"],
                         car_length,
                         car["start_edge"],
                         start_pos_meter,
@@ -256,7 +256,7 @@ class Network:
     def check_valid_car(self, car):
         '''Returns a detailed Exception if the given car does not conform to expected input structure.
         '''
-        car_ID = car["car_ID"]  # check uniqueness
+        car_ID = car["id"]  # check uniqueness
         if car_ID in list(self.car_ID_to_car.keys()):
             raise Exception("That car ID already exists.")
         
