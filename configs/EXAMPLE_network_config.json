@@ -15,30 +15,30 @@
     ],
     "edge_list": [
         {
-            "start_node": 1,
-            "end_node": 2,
+            "start_node_id": 1,
+            "end_node_id": 2,
             "id": 5000,
             "edge_length": 21.2,
             "max_speed": 10
         },
         {
-            "start_node": 2,
-            "end_node": 3,
+            "start_node_id": 2,
+            "end_node_id": 3,
             "id": 5001,
             "edge_length": 36,
             "max_speed": 6, 
             "max_capacity": 5
         },
         {
-            "start_node": 2,
-            "end_node": 4,
+            "start_node_id": 2,
+            "end_node_id": 4,
             "id": 5002,
             "edge_length": 23,
             "max_speed": 4
         },
         {
-            "start_node": 3,
-            "end_node": 2,
+            "start_node_id": 3,
+            "end_node_id": 2,
             "id": 5003,
             "edge_length": 5,
             "max_speed": 2, 

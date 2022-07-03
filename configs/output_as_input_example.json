@@ -1,0 +1,153 @@
+{
+    "edge_list": [
+        {
+            "id": 5000,
+            "start_node_id": 1,
+            "end_node_id": 2,
+            "edge_length": 21.2,
+            "max_speed": 10,
+            "max_capacity": Infinity,
+            "completed_cars": [],
+            "waiting_cars": {},
+            "current_cars": [
+                7001,
+                7000
+            ]
+        },
+        {
+            "id": 5001,
+            "start_node_id": 2,
+            "end_node_id": 3,
+            "edge_length": 36,
+            "max_speed": 6,
+            "max_capacity": 5,
+            "completed_cars": [],
+            "waiting_cars": {},
+            "current_cars": {}
+        },
+        {
+            "id": 5002,
+            "start_node_id": 2,
+            "end_node_id": 4,
+            "edge_length": 23,
+            "max_speed": 4,
+            "max_capacity": Infinity,
+            "completed_cars": [],
+            "waiting_cars": {},
+            "current_cars": {}
+        },
+        {
+            "id": 5003,
+            "start_node_id": 3,
+            "end_node_id": 2,
+            "edge_length": 5,
+            "max_speed": 2,
+            "max_capacity": 3,
+            "completed_cars": [],
+            "waiting_cars": {},
+            "current_cars": {}
+        }
+    ],
+    "node_list": [
+        {
+            "id": 1,
+            "intersection_time_cost": 0,
+            "stoplight_pattern": null,
+            "stoplight_pattern_current_index": 0,
+            "stoplight_duration": 60,
+            "stoplight_delay": 10,
+            "node_tick_number": 0,
+            "outbound_edges": [
+                5000
+            ],
+            "inbound_edges": []
+        },
+        {
+            "id": 2,
+            "intersection_time_cost": 0,
+            "stoplight_pattern": null,
+            "stoplight_pattern_current_index": 0,
+            "stoplight_duration": 60,
+            "stoplight_delay": 10,
+            "node_tick_number": 0,
+            "outbound_edges": [
+                5001,
+                5002
+            ],
+            "inbound_edges": [
+                5000,
+                5003
+            ]
+        },
+        {
+            "id": 3,
+            "intersection_time_cost": 0,
+            "stoplight_pattern": null,
+            "stoplight_pattern_current_index": 0,
+            "stoplight_duration": 60,
+            "stoplight_delay": 10,
+            "node_tick_number": 0,
+            "outbound_edges": [
+                5003
+            ],
+            "inbound_edges": [
+                5001
+            ]
+        },
+        {
+            "id": 4,
+            "intersection_time_cost": 0,
+            "stoplight_pattern": null,
+            "stoplight_pattern_current_index": 0,
+            "stoplight_duration": 60,
+            "stoplight_delay": 10,
+            "node_tick_number": 0,
+            "outbound_edges": [],
+            "inbound_edges": [
+                5002
+            ]
+        }
+    ],
+    "current_cars": [
+        {
+            "id": 7000,
+            "car_length": 2.5,
+            "start_edge": 5000,
+            "start_pos_meter": 3.2,
+            "end_edge": 5002,
+            "end_pos_meter": 20.7,
+            "car_type": "Static",
+            "route_preference": "Fastest",
+            "path": [
+                5002
+            ],
+            "mobile": true,
+            "route_status": "In progress",
+            "current_edge": 5000,
+            "current_pos_meter_car_front": 3.2,
+            "max_tick_potential": 1,
+            "current_tick_potential": 1
+        },
+        {
+            "id": 7001,
+            "car_length": 2.5,
+            "start_edge": 5000,
+            "start_pos_meter": 20,
+            "end_edge": 5002,
+            "end_pos_meter": 6.5,
+            "car_type": "Dynamic",
+            "route_preference": "Fastest",
+            "path": [
+                5000,
+                5002
+            ],
+            "mobile": true,
+            "route_status": "In progress",
+            "current_edge": 5000,
+            "current_pos_meter_car_front": 20,
+            "max_tick_potential": 1,
+            "current_tick_potential": 1
+        }
+    ],
+    "completed_cars": []
+}

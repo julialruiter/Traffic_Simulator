@@ -80,14 +80,14 @@ class Network:
             for car_id in edge_raw["completed_cars"]:  
                 completed_car_set.add(car_id)
             edge_snapshots.append(edge_raw)
-        snapshot["edges"] = edge_snapshots
+        snapshot["edge_list"] = edge_snapshots
 
         node_snapshots = []
         for node_key in self.node_ID_to_node:
             node = self.node_ID_to_node[node_key]
             node_raw = node.get_snapshot()  
             node_snapshots.append(node_raw)
-        snapshot["nodes"] = node_snapshots
+        snapshot["node_list"] = node_snapshots
 
         car_snapshots_current = []
         car_snapshots_completed = []
@@ -167,8 +167,8 @@ class Network:
 
         # create new Edge object
         new_edge = Edge(edge["id"],
-                        edge["start_node"],
-                        edge["end_node"],
+                        edge["start_node_id"],
+                        edge["end_node_id"],
                         edge_length,
                         speed_limit,
                         max_capacity)
